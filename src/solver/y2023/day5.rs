@@ -1,4 +1,4 @@
-
+use std::borrow::Cow;
 use crate::solver::TwoPartsProblemSolver;
 use crate::utils::int_range::{IntRange};
 use anyhow::{anyhow, bail, Context};
@@ -15,7 +15,6 @@ use std::fmt::Debug;
 use std::num::ParseIntError;
 
 use std::str::FromStr;
-use crate::utils::box_or_ref::BoxOrRef;
 
 pub struct Day5<T: PrimInt> {
     seeds: Vec<T>,
@@ -111,8 +110,8 @@ impl<T: PrimInt + Display + Debug + Copy + Clone + Send + Sync +'static> TwoPart
             .data
             .iter()
             .map(|(_, map)| map)
-            .fold(BoxOrRef::from_ref(&seeds), |acc, maps| {
-                BoxOrRef::boxed(get_range_from_range_to_range_maps(maps, acc.as_ref()))
+            .fold(Cow::from(seeds), |acc, maps| {
+                Cow::from(get_range_from_range_to_range_maps(maps, acc.as_ref()))
             })
             .as_ref()
             .iter()
@@ -151,14 +150,14 @@ fn try_get_from_one_range_map<T: PrimInt + Debug>(
 
 fn get_range_from_range_to_range_maps<'a, T, MI>(
     range_to_range_maps: MI,
-    sources: &'a Vec<IntRange<T>>,
+    sources: &'a [IntRange<T>],
 ) -> Vec<IntRange<T>>
 where
     T: PrimInt + Debug + 'a,
     MI: IntoIterator<Item = &'a (IntRange<T>, IntRange<T>)>,
 {
-    let (mut final_res, remainder) = range_to_range_maps.into_iter().fold(
-        (Vec::new(), BoxOrRef::from_ref(sources)),
+    let (mut final_res, mut remainder) = range_to_range_maps.into_iter().fold(
+        (Vec::new(), Cow::from(sources)),
         |(mut final_res, source), tuple_ref| {
             let (source_range, dest_range) = *tuple_ref;
             let source_ref = source.as_ref();
@@ -167,12 +166,12 @@ where
                                                       &source_range,
                                                       &dest_range);
             final_res.append(&mut res);
-            return (final_res, BoxOrRef::boxed(remainder));
+            return (final_res, Cow::from(remainder));
         },
     );
 
 
-    final_res.append(& mut remainder.into_owned());
+    final_res.append(& mut remainder.to_mut());
     return final_res;
 }
 

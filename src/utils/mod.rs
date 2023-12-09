@@ -1,5 +1,4 @@
 pub mod int_range;
-pub mod box_or_ref;
 
 use crate::solver::ProblemSolver;
 use anyhow::{Context, Result};
