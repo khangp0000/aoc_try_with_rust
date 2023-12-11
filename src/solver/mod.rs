@@ -13,6 +13,7 @@ use std::marker::PhantomData;
 use std::ops::Deref;
 use std::path::Path;
 use std::str::FromStr;
+use thiserror::Error;
 
 pub static AOC_PROBLEMS_SOLVER: Map<
     u16,
@@ -21,6 +22,12 @@ pub static AOC_PROBLEMS_SOLVER: Map<
     2023_u16 => &Y2023_SOLVER,
     2021_u16 => &Y2021_SOLVER
 };
+
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error(transparent)]
+    InputParseError(#[from] anyhow::Error),
+}
 
 pub trait ProblemSolver<D, P = Self>: FromStr<Err = anyhow::Error> {
     type Target: Display;

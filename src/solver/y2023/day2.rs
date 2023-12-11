@@ -1,11 +1,115 @@
 use crate::solver::TwoPartsProblemSolver;
-use anyhow::{anyhow, bail, Context, Result};
+use crate::utils::FromSScanfError;
+use anyhow::{anyhow};
 use sscanf::sscanf;
 use std::cmp::max;
 use std::str::FromStr;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("Failed to split with delimiter {1:?}: {0:?}")]
+    FailedToSplit(String, char),
+    #[error("Failed to parse color, expected \"red\", \"green\" or \"blue\"; but got {0:?} ")]
+    FailedToParseColor(String),
+    #[error(
+        "Failed to sscanf {:?} with pattern {:?} caused by {:?}",
+        string_to_scan,
+        pattern,
+        source
+    )]
+    FailedToSScanf {
+        string_to_scan: String,
+        pattern: &'static str,
+        source: Option<anyhow::Error>,
+    },
+}
+
+impl FromSScanfError for Error {
+    fn from_sscanf_err(
+        err: &sscanf::Error,
+        string_to_scan: String,
+        pattern: &'static str,
+    ) -> Error {
+        return match err {
+            sscanf::Error::MatchFailed => Error::FailedToSScanf {
+                string_to_scan,
+                pattern,
+                source: None,
+            },
+            sscanf::Error::ParsingFailed(inner_error) => Error::FailedToSScanf {
+                string_to_scan,
+                pattern,
+                source: Some(anyhow!(inner_error.to_string())),
+            },
+        };
+    }
+}
 
 pub struct Day2 {
-    input: String,
+    games: Vec<Game>,
+}
+
+pub struct Game {
+    index: u32,
+    bag: Vec<CubeSet>,
+}
+
+pub struct CubeSet {
+    red: u32,
+    green: u32,
+    blue: u32,
+}
+
+impl FromStr for CubeSet {
+    type Err = Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let mut red = 0_u32;
+        let mut green = 0_u32;
+        let mut blue = 0_u32;
+        for step in s.split(',') {
+            let step = step.trim();
+            let (count, color) = sscanf!(step, "{u32} {str}")
+                .map_err(|e| Error::from_sscanf_err(&e, step.to_owned(), "{u32} {str}"))?;
+            match color {
+                "red" => {
+                    red = count;
+                }
+                "green" => {
+                    green = count;
+                }
+                "blue" => {
+                    blue = count;
+                }
+                _ => return Err(Error::FailedToParseColor(color.to_owned())),
+            }
+        }
+        return Ok(CubeSet { red, green, blue });
+    }
+}
+
+impl FromStr for Game {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (game_number, sets) = s
+            .split_once(':')
+            .ok_or_else(|| Error::FailedToSplit(s.to_owned(), ':'))?;
+        let game_number = game_number.trim();
+        let sets = sets.trim();
+        let game_number = sscanf!(game_number, "Game {u32}")
+            .map_err(|e| Error::from_sscanf_err(&e, game_number.to_owned(), "Game {u32}"))?;
+        let bag = sets
+            .split(';')
+            .map(str::trim)
+            .map(CubeSet::from_str)
+            .collect::<Result<_, _>>()?;
+        return Ok(Game {
+            index: game_number,
+            bag,
+        });
+    }
 }
 
 impl FromStr for Day2 {
@@ -13,120 +117,55 @@ impl FromStr for Day2 {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         return Ok(Day2 {
-            input: s.to_owned(),
+            games: s.lines().map(Game::from_str).collect::<Result<_, _>>()?,
         });
     }
 }
 
 impl TwoPartsProblemSolver for Day2 {
-    type Target1 = u64;
-    type Target2 = u64;
+    type Target1 = u32;
+    type Target2 = u32;
 
-    fn solve_1(&self) -> anyhow::Result<u64> {
-        return self
-            .input
-            .lines()
-            .map(is_valid_game)
-            .map(Result::transpose)
-            .filter(Option::is_some)
-            .map(Option::unwrap)
-            .sum();
+    fn solve_1(&self) -> anyhow::Result<u32> {
+        return Ok(self
+            .games
+            .iter()
+            .filter(|game| {
+                game.bag
+                    .iter()
+                    .all(|bag| bag.red <= 12_u32 && bag.green <= 13_u32 && bag.blue <= 14_u32)
+            })
+            .map(|game| game.index)
+            .sum::<u32>());
     }
 
-    fn solve_2(&self) -> anyhow::Result<u64> {
-        return self.input.lines().map(power_factor).sum();
+    fn solve_2(&self) -> anyhow::Result<u32> {
+        return Ok(self
+            .games
+            .iter()
+            .map(|game| {
+                game.bag.iter().fold(
+                    CubeSet {
+                        red: 0_u32,
+                        green: 0_u32,
+                        blue: 0_u32,
+                    },
+                    |mut left, right| {
+                        left.red = max(left.red, right.red);
+                        left.green = max(left.green, right.green);
+                        left.blue = max(left.blue, right.blue);
+                        return left;
+                    },
+                )
+            })
+            .map(|cube_set| cube_set.red * cube_set.green * cube_set.blue)
+            .sum::<u32>());
     }
-}
-
-fn is_valid_game(line: &str) -> anyhow::Result<Option<u64>> {
-    let (game_number, sets) = line
-        .split_once(':')
-        .with_context(|| format!("Failed to split with delimiter ':' for string: {}", line))?;
-    let game_number = game_number.trim();
-    let sets = sets.trim();
-
-    for set in sets.split(';') {
-        let set = set.trim();
-        for step in set.split(',') {
-            let step = step.trim();
-            let (count, color) = sscanf!(step, "{u64} {str}").map_err(|_| {
-                anyhow!(format!(
-                    "Failed to get count and color from string: {}",
-                    step
-                ))
-            })?;
-            match color {
-                "red" => {
-                    if count > 12 {
-                        return Ok(None);
-                    }
-                }
-                "green" => {
-                    if count > 13 {
-                        return Ok(None);
-                    }
-                }
-                "blue" => {
-                    if count > 14 {
-                        return Ok(None);
-                    }
-                }
-                _ => {
-                    bail!(format!("Invalid color: {}", color));
-                }
-            }
-        }
-    }
-
-    return Ok(Some(sscanf!(game_number, "Game {u64}").map_err(|_| {
-        anyhow!(format!(
-            "Failed to get game number from string: {}",
-            game_number
-        ))
-    })?));
-}
-
-fn power_factor(line: &str) -> anyhow::Result<u64> {
-    let (_, sets) = line
-        .split_once(':')
-        .with_context(|| format!("Failed to split with delimiter ':' for string: {}", line))?;
-    let sets = sets.trim();
-    let mut red = 0_u64;
-    let mut green = 0_u64;
-    let mut blue = 0_u64;
-    for set in sets.split(';') {
-        let set = set.trim();
-        for step in set.split(',') {
-            let step = step.trim();
-            let (count, color) = sscanf!(step, "{u64} {str}").map_err(|_| {
-                anyhow!(format!(
-                    "Failed to get count and color from string: {}",
-                    step
-                ))
-            })?;
-            match color {
-                "red" => {
-                    red = max(count, red);
-                }
-                "green" => {
-                    green = max(count, green);
-                }
-                "blue" => {
-                    blue = max(count, blue);
-                }
-                _ => {
-                    bail!(format!("Invalid color: {}", color));
-                }
-            }
-        }
-    }
-
-    return Ok(red * green * blue);
 }
 
 #[cfg(all(test))]
 mod tests {
-    use crate::solver::y2023::day2::{is_valid_game, power_factor, Day2};
+    use crate::solver::y2023::day2::Day2;
     use crate::solver::TwoPartsProblemSolver;
     use indoc::indoc;
     use std::str::FromStr;
@@ -140,38 +179,14 @@ mod tests {
     "};
 
     #[test]
-    fn test_line_1() -> anyhow::Result<()> {
-        assert_eq!(
-            is_valid_game("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green")?,
-            Some(1)
-        );
-        assert_eq!(
-            is_valid_game(
-                "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red"
-            )?,
-            None
-        );
-        Ok(())
-    }
-
-    #[test]
     fn test_sample_1() -> anyhow::Result<()> {
         assert_eq!(Day2::from_str(SAMPLE_INPUT)?.solve_1()?, 8);
         Ok(())
     }
 
     #[test]
-    fn test_line_2() -> anyhow::Result<()> {
-        assert_eq!(
-            power_factor("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green")?,
-            48_u64
-        );
-        Ok(())
-    }
-
-    #[test]
     fn test_sample_2() -> anyhow::Result<()> {
-        assert_eq!(Day2::from_str(SAMPLE_INPUT)?.solve_2()?, 2286_u64);
+        assert_eq!(Day2::from_str(SAMPLE_INPUT)?.solve_2()?, 2286);
         Ok(())
     }
 }

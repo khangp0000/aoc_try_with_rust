@@ -18,6 +18,7 @@ pub mod day4;
 pub mod day5;
 pub mod day6;
 pub mod day7;
+pub mod day8;
 
 pub static Y2023_SOLVER: Map<u8, fn(u16, u8, &Path, &Path) -> anyhow::Result<Box<dyn Display>>> = phf_map! {
     1_u8 => boxed_try_get_input_and_solve!(Day1),

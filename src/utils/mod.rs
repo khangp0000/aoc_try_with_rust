@@ -26,7 +26,9 @@ macro_rules! boxed_try_get_input_and_solve {
 
 pub(crate) use boxed_try_get_input_and_solve;
 
-pub trait PrimitiveInteger {}
+pub trait FromSScanfError {
+    fn from_sscanf_err(err: &sscanf::Error, string_to_scan: String, pattern: &'static str) -> Self;
+}
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Result2Parts<T1: Display, T2: Display> {
@@ -36,7 +38,7 @@ pub struct Result2Parts<T1: Display, T2: Display> {
 
 impl<T1: Display, T2: Display> Display for Result2Parts<T1, T2> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "<part 1: {}, part2: {}>", self.res_1, self.res_2);
+        return write!(f, "<part 1: {}, part 2: {}>", self.res_1, self.res_2);
     }
 }
 

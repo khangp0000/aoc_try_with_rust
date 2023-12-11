@@ -1,8 +1,15 @@
 use crate::solver::TwoPartsProblemSolver;
-use anyhow::Context;
-use anyhow::Result;
 use regex::Regex;
 use std::str::FromStr;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("There is no digit in string: {0:?}")]
+    NoDigitInString(String),
+    #[error("There is no digit or english digit in string: {0:?}")]
+    NoDigitOrEnglishDigitInString(String),
+}
 
 pub struct Day1 {
     input: String,
@@ -31,14 +38,14 @@ impl TwoPartsProblemSolver for Day1 {
                 .map(<u32>::from_str)
                 .transpose()?
                 .map(|v| v * 10)
-                .with_context(|| format!("There is no digit in string {}.", line))?;
+                .ok_or_else(|| Error::NoDigitInString(line.to_owned()))?;
 
             sum += line
                 .rmatches(|c: char| c.is_ascii_digit())
                 .next()
                 .map(<u32>::from_str)
                 .transpose()?
-                .with_context(|| format!("There is no digit in string {}.", line))?;
+                .ok_or_else(|| Error::NoDigitInString(line.to_owned()))?;
         }
         return Ok(sum);
     }
@@ -53,14 +60,14 @@ impl TwoPartsProblemSolver for Day1 {
             sum += str_or_rev_digit_to_u32(
                 forward_search
                     .find(line)
-                    .with_context(|| format!("There is no digit in string {}.", line))?
+                    .ok_or_else(|| Error::NoDigitOrEnglishDigitInString(line.to_owned()))?
                     .as_str(),
             )? * 10_u32;
             let rev_line: String = line.chars().rev().collect();
             sum += str_or_rev_digit_to_u32(
                 backward_search
                     .find(rev_line.as_str())
-                    .with_context(|| format!("There is no reverse digit in string {}.", line))?
+                    .ok_or_else(|| Error::NoDigitOrEnglishDigitInString(line.to_owned()))?
                     .as_str(),
             )?;
         }
