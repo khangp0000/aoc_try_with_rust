@@ -86,7 +86,7 @@ where
 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         return Ok(TwoProblemsCombined::new(
             P1::from_str(s).map_err(|e| anyhow!(e))?,
             P2::from_str(s).map_err(|e| anyhow!(e))?,

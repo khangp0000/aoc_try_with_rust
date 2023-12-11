@@ -62,9 +62,9 @@ pub struct CubeSet {
 }
 
 impl FromStr for CubeSet {
-    type Err = Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut red = 0_u32;
         let mut green = 0_u32;
         let mut blue = 0_u32;
@@ -82,7 +82,7 @@ impl FromStr for CubeSet {
                 "blue" => {
                     blue = count;
                 }
-                _ => return Err(Error::FailedToParseColor(color.to_owned())),
+                _ => return Err(Error::FailedToParseColor(color.to_owned()))?,
             }
         }
         return Ok(CubeSet { red, green, blue });
@@ -90,7 +90,7 @@ impl FromStr for CubeSet {
 }
 
 impl FromStr for Game {
-    type Err = Error;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (game_number, sets) = s
@@ -165,7 +165,7 @@ impl TwoPartsProblemSolver for Day2 {
 
 #[cfg(all(test))]
 mod tests {
-    use crate::solver::y2023::day2::Day2;
+    use crate::solver::y2023::day2::{CubeSet, Day2, Game};
     use crate::solver::TwoPartsProblemSolver;
     use indoc::indoc;
     use std::str::FromStr;
