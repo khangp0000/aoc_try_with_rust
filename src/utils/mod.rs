@@ -3,24 +3,32 @@ pub mod int_range;
 use crate::solver::ProblemSolver;
 use anyhow::{Context, Result};
 use reqwest::blocking::Client;
+
 use std::fmt::{Display, Formatter};
 use std::fs;
 use std::fs::{create_dir_all, read_to_string, File};
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::sync::OnceLock;
 
 macro_rules! boxed_try_get_input_and_solve {
     ($solver:ty) => {
         |year, day, base_input_path, session_file_path| {
-            <$solver>::try_get_input_and_solve(year, day, base_input_path, session_file_path)
-                .map(|r| Box::new(r) as Box<dyn Display>)
+            crate::utils::try_get_input_and_solve::<$solver, _, _>(
+                year,
+                day,
+                base_input_path,
+                session_file_path,
+            )
+            .map(|r| Box::new(r) as Box<dyn Display>)
         }
     };
 }
 
 pub(crate) use boxed_try_get_input_and_solve;
 
+pub trait PrimitiveInteger {}
+
+#[derive(Debug, Eq, PartialEq)]
 pub struct Result2Parts<T1: Display, T2: Display> {
     res_1: T1,
     res_2: T2,
@@ -104,16 +112,23 @@ pub trait GetInputAndSolver<T: Display> {
     ) -> Result<T>;
 }
 
-impl<T1: ProblemSolver<T> + FromStr<Err = anyhow::Error>, T: Display> GetInputAndSolver<T> for T1 {
-    fn try_get_input_and_solve(
-        year: u16,
-        day: u8,
-        base_input_path: &Path,
-        session_file_path: &Path,
-    ) -> Result<T> {
-        let input_path = get_input_path(base_input_path, year, day);
-        download_input_if_needed(year, day, &input_path, session_file_path)?;
-        let input = read_to_string(&input_path)?;
-        return Self::from_str(&input)?.solve();
-    }
+pub fn try_get_input_and_solve<P: ProblemSolver<B, Target = T>, T: Display, B>(
+    year: u16,
+    day: u8,
+    base_input_path: &Path,
+    session_file_path: &Path,
+) -> Result<T> {
+    let input = get_input(year, day, base_input_path, session_file_path)?;
+    return P::from_str(&input)?.solve();
+}
+
+pub fn get_input(
+    year: u16,
+    day: u8,
+    base_input_path: &Path,
+    session_file_path: &Path,
+) -> Result<String> {
+    let input_path = get_input_path(base_input_path, year, day);
+    download_input_if_needed(year, day, &input_path, session_file_path)?;
+    return Ok(read_to_string(&input_path)?);
 }

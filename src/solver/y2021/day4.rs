@@ -27,7 +27,9 @@ impl FromStr for Day4 {
     }
 }
 
-impl TwoPartsProblemSolver<u64, u64> for Day4 {
+impl TwoPartsProblemSolver for Day4 {
+    type Target1 = u64;
+    type Target2 = u64;
     fn solve_1(&self) -> Result<u64> {
         return Ok(self
             .cards

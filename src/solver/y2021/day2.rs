@@ -44,7 +44,10 @@ impl FromStr for Day2 {
     }
 }
 
-impl TwoPartsProblemSolver<i32, i32> for Day2 {
+impl TwoPartsProblemSolver for Day2 {
+    type Target1 = i32;
+    type Target2 = i32;
+
     fn solve_1(&self) -> Result<i32> {
         let (x, y) = self
             .movements

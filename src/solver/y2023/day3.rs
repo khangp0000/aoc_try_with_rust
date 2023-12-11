@@ -19,7 +19,10 @@ impl FromStr for Day3 {
     }
 }
 
-impl TwoPartsProblemSolver<u64, u64> for Day3 {
+impl TwoPartsProblemSolver for Day3 {
+    type Target1 = u64;
+    type Target2 = u64;
+
     fn solve_1(&self) -> anyhow::Result<u64> {
         return (0..self.board.len()).map(|i| self.process_line_1(i)).sum();
     }

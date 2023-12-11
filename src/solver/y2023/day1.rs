@@ -18,7 +18,10 @@ impl FromStr for Day1 {
     }
 }
 
-impl TwoPartsProblemSolver<u32, u32> for Day1 {
+impl TwoPartsProblemSolver for Day1 {
+    type Target1 = u32;
+    type Target2 = u32;
+
     fn solve_1(&self) -> anyhow::Result<u32> {
         let mut sum = 0_u32;
         for line in self.input.lines() {

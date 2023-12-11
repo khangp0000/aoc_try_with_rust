@@ -5,8 +5,8 @@ use bitvec::order::{BitOrder, Msb0};
 use bitvec::ptr::{BitRef, Mutability};
 use bitvec::store::BitStore;
 use bitvec::vec::BitVec;
-use std::str::FromStr;
 use dyn_iter::DynIter;
+use std::str::FromStr;
 
 pub struct Day3 {
     report: Vec<BitVec<u32, Msb0>>,
@@ -33,14 +33,15 @@ impl FromStr for Day3 {
     }
 }
 
-impl TwoPartsProblemSolver<u32, u32> for Day3 {
+impl TwoPartsProblemSolver for Day3 {
+    type Target1 = u32;
+    type Target2 = u32;
+
     fn solve_1(&self) -> anyhow::Result<u32> {
         let (gamma_bit, epsilon_bit) = self
             .report
             .iter()
-            .map(|b|  {
-                DynIter::new(b.iter().map(|b| if *b { 1_i32 } else { -1_i32 }))
-            })
+            .map(|b| DynIter::new(b.iter().map(|b| if *b { 1_i32 } else { -1_i32 })))
             .reduce(|l, r| DynIter::new(l.zip(r).map(|(l_val, r_val)| l_val + r_val)))
             .with_context(|| format!("Failed to reduce, is the list empty?"))?
             .map(|val| {

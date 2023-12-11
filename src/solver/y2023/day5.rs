@@ -1,7 +1,7 @@
-use std::borrow::Cow;
 use crate::solver::TwoPartsProblemSolver;
-use crate::utils::int_range::{IntRange};
+use crate::utils::int_range::IntRange;
 use anyhow::{anyhow, bail, Context};
+use std::borrow::Cow;
 
 use derive_more::Display;
 use num::PrimInt;
@@ -88,9 +88,13 @@ impl<T: PrimInt + FromStr<Err = ParseIntError> + Debug + Send + Sync + Display +
     }
 }
 
-impl<T: PrimInt + Display + Debug + Copy + Clone + Send + Sync +'static> TwoPartsProblemSolver<T, T>
-    for Day5<T>
+impl<T> TwoPartsProblemSolver for Day5<T>
+where
+    T: PrimInt + Display + Debug + Send + Sync + FromStr<Err = ParseIntError> + 'static,
 {
+    type Target1 = T;
+    type Target2 = T;
+
     fn solve_1(&self) -> anyhow::Result<T> {
         let mut seeds: Box<dyn Iterator<Item = T>> = Box::new(self.seeds.iter().map(T::clone));
         for (_, map) in &self.data {
@@ -162,16 +166,13 @@ where
             let (source_range, dest_range) = *tuple_ref;
             let source_ref = source.as_ref();
             let (mut res, remainder) =
-                get_range_from_one_range_to_range_map(source_ref,
-                                                      &source_range,
-                                                      &dest_range);
+                get_range_from_one_range_to_range_map(source_ref, &source_range, &dest_range);
             final_res.append(&mut res);
             return (final_res, Cow::from(remainder));
         },
     );
 
-
-    final_res.append(& mut remainder.to_mut());
+    final_res.append(&mut remainder.to_mut());
     return final_res;
 }
 
