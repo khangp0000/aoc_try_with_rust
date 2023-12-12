@@ -27,12 +27,3 @@ lto = true
 
 [profile.test]
 opt-level = 3
-debug = false
-split-debuginfo = '...'  # Platform-specific.
-strip = false
-debug-assertions = true
-overflow-checks = false
-lto = false
-incremental = false
-codegen-units = 16
-rpath = false

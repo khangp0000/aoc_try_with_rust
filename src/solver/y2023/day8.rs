@@ -140,10 +140,10 @@ impl ProblemSolver<Day8Part2> for Day8Part2 {
                         count += 1;
                         if len_after_filter !=  len_before_filter {
                             lcm = num::integer::lcm(lcm, count as usize);
-                        }
 
-                        if len_after_filter == 0 {
-                            return ControlFlow::Break(Ok(lcm));
+                            if len_after_filter == 0 {
+                                return ControlFlow::Break(Ok(lcm));
+                            }
                         }
 
                         ControlFlow::Continue((new_keys, count, lcm))
@@ -159,13 +159,12 @@ impl ProblemSolver<Day8Part2> for Day8Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day8::{Day8};
-    use crate::solver::{TwoPartsProblemSolver};
-    
+    use crate::solver::y2023::day8::Day8;
+    use crate::solver::TwoPartsProblemSolver;
+
     use indoc::indoc;
-    
+
     use std::str::FromStr;
-    
 
     static SAMPLE_INPUT_1: &str = indoc! {"
             LLR

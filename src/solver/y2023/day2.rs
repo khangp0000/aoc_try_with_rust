@@ -7,8 +7,6 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Failed to split with delimiter {1:?}: {0:?}")]
-    FailedToSplit(String, char),
     #[error("Failed to parse color, expected \"red\", \"green\" or \"blue\"; but got {0:?}")]
     FailedToParseColor(String),
 }
@@ -63,7 +61,7 @@ impl FromStr for Game {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (game_number, sets) = s
             .split_once(':')
-            .ok_or_else(|| Error::FailedToSplit(s.to_owned(), ':'))?;
+            .ok_or_else(|| crate::utils::Error::FailedToSplit(s.to_owned(), ':'))?;
         let game_number = game_number.trim();
         let sets = sets.trim();
         let game_number = sscanf!(game_number, "Game {u32}").map_err(|e| {

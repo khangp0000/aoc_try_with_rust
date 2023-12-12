@@ -35,6 +35,8 @@ pub trait FromSScanfError {
 
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("Failed to split with delimiter {1:?}: {0:?}")]
+    FailedToSplit(String, char),
     #[error("Failed to sscanf {string_to_scan:?} with pattern {pattern:?} caused by {source:?}")]
     FailedToSScanf {
         string_to_scan: String,
