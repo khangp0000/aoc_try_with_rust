@@ -29,8 +29,8 @@ impl FromStr for Day4 {
 }
 
 impl TwoPartsProblemSolver for Day4 {
-    type Target1 = u64;
-    type Target2 = u64;
+    type Solution1Type = u64;
+    type Solution2Type = u64;
 
     fn solve_1(&self) -> anyhow::Result<u64> {
         return Ok(self

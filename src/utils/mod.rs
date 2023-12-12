@@ -1,14 +1,17 @@
 pub mod int_range;
 
 use crate::solver::ProblemSolver;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use reqwest::blocking::Client;
 
+use derive_more::Deref;
+use derive_new::new;
 use std::fmt::{Display, Formatter};
 use std::fs;
 use std::fs::{create_dir_all, read_to_string, File};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
+use thiserror::Error;
 
 macro_rules! boxed_try_get_input_and_solve {
     ($solver:ty) => {
@@ -30,10 +33,49 @@ pub trait FromSScanfError {
     fn from_sscanf_err(err: &sscanf::Error, string_to_scan: String, pattern: &'static str) -> Self;
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("Failed to sscanf {string_to_scan:?} with pattern {pattern:?} caused by {source:?}")]
+    FailedToSScanf {
+        string_to_scan: String,
+        pattern: &'static str,
+        #[source]
+        source: Option<anyhow::Error>,
+    },
+}
+
+impl FromSScanfError for Error {
+    fn from_sscanf_err(
+        err: &sscanf::Error,
+        string_to_scan: String,
+        pattern: &'static str,
+    ) -> Error {
+        return match err {
+            sscanf::Error::MatchFailed => Error::FailedToSScanf {
+                string_to_scan,
+                pattern,
+                source: None,
+            },
+            sscanf::Error::ParsingFailed(inner_error) => Error::FailedToSScanf {
+                string_to_scan,
+                pattern,
+                source: Some(anyhow!(inner_error.to_string())),
+            },
+        };
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, new)]
 pub struct Result2Parts<T1: Display, T2: Display> {
     res_1: T1,
     res_2: T2,
+}
+
+#[derive(new, Deref, Debug, Eq, PartialEq)]
+pub struct WarningResult<T> {
+    #[deref]
+    res: T,
+    warning: &'static str,
 }
 
 impl<T1: Display, T2: Display> Display for Result2Parts<T1, T2> {
@@ -42,9 +84,9 @@ impl<T1: Display, T2: Display> Display for Result2Parts<T1, T2> {
     }
 }
 
-impl<T1: Display, T2: Display> Result2Parts<T1, T2> {
-    pub fn new(res_1: T1, res_2: T2) -> Self {
-        return Result2Parts { res_1, res_2 };
+impl<T: Display> Display for WarningResult<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        return write!(f, "{} --{}--", self.res, self.warning);
     }
 }
 
@@ -114,7 +156,7 @@ pub trait GetInputAndSolver<T: Display> {
     ) -> Result<T>;
 }
 
-pub fn try_get_input_and_solve<P: ProblemSolver<B, Target = T>, T: Display, B>(
+pub fn try_get_input_and_solve<P: ProblemSolver<B, SolutionType = T>, T: Display, B>(
     year: u16,
     day: u8,
     base_input_path: &Path,

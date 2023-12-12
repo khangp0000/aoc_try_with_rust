@@ -1,11 +1,11 @@
 use anyhow::Context;
 use num::{FromPrimitive, PrimInt};
 
-use crate::solver::{ProblemSolver, TwoProblemsCombined};
+use crate::solver::{ProblemSolver, TwoSolversCombined};
 use derive_more::{Deref, FromStr};
 
 #[derive(Deref, FromStr)]
-pub struct Day6(TwoProblemsCombined<Day6Part1, Day6Part2>);
+pub struct Day6(TwoSolversCombined<Day6Part1, Day6Part2>);
 
 pub struct Day6Part1 {
     times: Vec<i32>,
@@ -77,7 +77,7 @@ impl FromStr for Day6Part2 {
 }
 
 impl ProblemSolver<Day6Part1> for Day6Part1 {
-    type Target = i32;
+    type SolutionType = i32;
     fn solve(&self) -> anyhow::Result<i32> {
         return self
             .times
@@ -98,7 +98,7 @@ impl ProblemSolver<Day6Part1> for Day6Part1 {
 }
 
 impl ProblemSolver<Day6Part2> for Day6Part2 {
-    type Target = i64;
+    type SolutionType = i64;
     fn solve(&self) -> anyhow::Result<i64> {
         let (left, right) = find_time_hold_range(self.time, self.distance).with_context(|| {
             format!(

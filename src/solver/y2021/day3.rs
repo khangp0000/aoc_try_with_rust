@@ -34,8 +34,8 @@ impl FromStr for Day3 {
 }
 
 impl TwoPartsProblemSolver for Day3 {
-    type Target1 = u32;
-    type Target2 = u32;
+    type Solution1Type = u32;
+    type Solution2Type = u32;
 
     fn solve_1(&self) -> anyhow::Result<u32> {
         let (gamma_bit, epsilon_bit) = self
@@ -53,7 +53,6 @@ impl TwoPartsProblemSolver for Day3 {
         let gamma = gamma_bit.load_be::<u32>();
         let epsilon = epsilon_bit.load_be::<u32>();
 
-        println!("{} {}", gamma, epsilon);
         Ok(gamma * epsilon)
     }
 

@@ -17,8 +17,8 @@ impl FromStr for Day1 {
 }
 
 impl TwoPartsProblemSolver for Day1 {
-    type Target1 = usize;
-    type Target2 = usize;
+    type Solution1Type = usize;
+    type Solution2Type = usize;
     fn solve_1(&self) -> Result<usize> {
         let report_slice = self.report.as_slice();
         return Ok(report_slice[1..]

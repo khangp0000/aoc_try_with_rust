@@ -1,6 +1,5 @@
 use crate::solver::TwoPartsProblemSolver;
 use crate::utils::FromSScanfError;
-use anyhow::{anyhow};
 use sscanf::sscanf;
 use std::cmp::max;
 use std::str::FromStr;
@@ -10,40 +9,8 @@ use thiserror::Error;
 pub enum Error {
     #[error("Failed to split with delimiter {1:?}: {0:?}")]
     FailedToSplit(String, char),
-    #[error("Failed to parse color, expected \"red\", \"green\" or \"blue\"; but got {0:?} ")]
+    #[error("Failed to parse color, expected \"red\", \"green\" or \"blue\"; but got {0:?}")]
     FailedToParseColor(String),
-    #[error(
-        "Failed to sscanf {:?} with pattern {:?} caused by {:?}",
-        string_to_scan,
-        pattern,
-        source
-    )]
-    FailedToSScanf {
-        string_to_scan: String,
-        pattern: &'static str,
-        source: Option<anyhow::Error>,
-    },
-}
-
-impl FromSScanfError for Error {
-    fn from_sscanf_err(
-        err: &sscanf::Error,
-        string_to_scan: String,
-        pattern: &'static str,
-    ) -> Error {
-        return match err {
-            sscanf::Error::MatchFailed => Error::FailedToSScanf {
-                string_to_scan,
-                pattern,
-                source: None,
-            },
-            sscanf::Error::ParsingFailed(inner_error) => Error::FailedToSScanf {
-                string_to_scan,
-                pattern,
-                source: Some(anyhow!(inner_error.to_string())),
-            },
-        };
-    }
 }
 
 pub struct Day2 {
@@ -70,8 +37,9 @@ impl FromStr for CubeSet {
         let mut blue = 0_u32;
         for step in s.split(',') {
             let step = step.trim();
-            let (count, color) = sscanf!(step, "{u32} {str}")
-                .map_err(|e| Error::from_sscanf_err(&e, step.to_owned(), "{u32} {str}"))?;
+            let (count, color) = sscanf!(step, "{u32} {str}").map_err(|e| {
+                crate::utils::Error::from_sscanf_err(&e, step.to_owned(), "{u32} {str}")
+            })?;
             match color {
                 "red" => {
                     red = count;
@@ -98,8 +66,9 @@ impl FromStr for Game {
             .ok_or_else(|| Error::FailedToSplit(s.to_owned(), ':'))?;
         let game_number = game_number.trim();
         let sets = sets.trim();
-        let game_number = sscanf!(game_number, "Game {u32}")
-            .map_err(|e| Error::from_sscanf_err(&e, game_number.to_owned(), "Game {u32}"))?;
+        let game_number = sscanf!(game_number, "Game {u32}").map_err(|e| {
+            crate::utils::Error::from_sscanf_err(&e, game_number.to_owned(), "Game {u32}")
+        })?;
         let bag = sets
             .split(';')
             .map(str::trim)
@@ -123,8 +92,8 @@ impl FromStr for Day2 {
 }
 
 impl TwoPartsProblemSolver for Day2 {
-    type Target1 = u32;
-    type Target2 = u32;
+    type Solution1Type = u32;
+    type Solution2Type = u32;
 
     fn solve_1(&self) -> anyhow::Result<u32> {
         return Ok(self
@@ -165,7 +134,7 @@ impl TwoPartsProblemSolver for Day2 {
 
 #[cfg(all(test))]
 mod tests {
-    use crate::solver::y2023::day2::{CubeSet, Day2, Game};
+    use crate::solver::y2023::day2::Day2;
     use crate::solver::TwoPartsProblemSolver;
     use indoc::indoc;
     use std::str::FromStr;

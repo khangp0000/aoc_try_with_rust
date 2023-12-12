@@ -55,7 +55,7 @@ fn main() -> anyhow::Result<()> {
         if let Some((_, solver_fn)) = day_mapper_solvers.get_entry(&day) {
             let result = solver_fn(args.year, day, &args.input_folder, &args.session_file)?;
             println!("{0}.{1}. Result for year {0} day {1} is:", args.year, day);
-            println!("    {}", result);
+            println!("    {result}");
         } else {
             eprintln!(
                 "{0}.{1}. There is no solver for year {0} day {1}.",
@@ -86,7 +86,7 @@ mod tests {
             &PathBuf::from(&INPUT_FOLDER_PATH),
             &PathBuf::from(&SESSION_PATH),
         )?;
-        println!("Result for year {} day {} is:", year, day);
+        println!("Result for year {year} day {day} is:");
         println!("{}", result);
         return Ok(());
     }

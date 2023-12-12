@@ -1,11 +1,11 @@
 use anyhow::{bail, Context};
 use std::collections::BinaryHeap;
 
-use crate::solver::{ProblemSolver, TwoProblemsCombined};
+use crate::solver::{ProblemSolver, TwoSolversCombined};
 use derive_more::{Deref, Display, FromStr};
 
 #[derive(Deref, FromStr)]
-pub struct Day7(TwoProblemsCombined<Day7Part1, Day7Part2>);
+pub struct Day7(TwoSolversCombined<Day7Part1, Day7Part2>);
 
 #[derive(Deref)]
 pub struct Day7Part1(Vec<(CardHand, u32)>);
@@ -182,9 +182,9 @@ impl FromStr for Day7Part1 {
 }
 
 impl ProblemSolver<Day7Part1> for Day7Part1 {
-    type Target = u32;
+    type SolutionType = u32;
 
-    fn solve(&self) -> anyhow::Result<Self::Target> {
+    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
         return Ok(get_hands_rank(self.deref()));
     }
 }
@@ -215,9 +215,9 @@ impl FromStr for Day7Part2 {
 }
 
 impl ProblemSolver<Day7Part2> for Day7Part2 {
-    type Target = u32;
+    type SolutionType = u32;
 
-    fn solve(&self) -> anyhow::Result<Self::Target> {
+    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
         return Ok(get_hands_rank(self.deref()));
     }
 }

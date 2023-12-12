@@ -92,8 +92,8 @@ impl<T> TwoPartsProblemSolver for Day5<T>
 where
     T: PrimInt + Display + Debug + Send + Sync + FromStr<Err = ParseIntError> + 'static,
 {
-    type Target1 = T;
-    type Target2 = T;
+    type Solution1Type = T;
+    type Solution2Type = T;
 
     fn solve_1(&self) -> anyhow::Result<T> {
         let mut seeds: Box<dyn Iterator<Item = T>> = Box::new(self.seeds.iter().map(T::clone));
