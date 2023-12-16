@@ -11,13 +11,14 @@ mod utils;
 #[derive(Parser, Debug)]
 #[command(author, version, about, arg_required_else_help = true)]
 struct Args {
-    /// Path to session file, "cookie: session={session_file_content}" will be used to
-    /// get input data.
+    /// Path to session file, "cookie: session={session_file_content}" will be
+    /// used to get input data.
     #[arg(short, long, default_value = "data/session.txt")]
     session_file: PathBuf,
 
-    /// Input path folder, used to store downloaded input data. Will not re-download
-    /// if file already exists. File path is "{input_folder}/y{year}/day{day}.txt"
+    /// Input path folder, used to store downloaded input data. Will not
+    /// re-download if file already exists. File path is
+    /// "{input_folder}/y{year}/day{day}.txt"
     #[arg(short, long, default_value = "data")]
     input_folder: PathBuf,
 
@@ -34,16 +35,10 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let solvers = AOC_PROBLEMS_SOLVER.get_entry(&args.year);
     let (day_mapper_solvers, mut days) = match &solvers {
-        None => bail!(format!(
-            "There is no solver for selected year {}",
-            args.year
-        )),
+        None => bail!(format!("There is no solver for selected year {}", args.year)),
         Some(entry) => {
             if args.days.is_empty() {
-                (
-                    *entry.1,
-                    entry.1.keys().map(|&day| day).collect::<Vec<u8>>(),
-                )
+                (*entry.1, entry.1.keys().map(|&day| day).collect::<Vec<u8>>())
             } else {
                 (*entry.1, args.days)
             }
@@ -58,10 +53,7 @@ fn main() -> Result<()> {
             println!("{0}.{1}. Result for year {0} day {1} is:", args.year, day);
             println!("    {result}");
         } else {
-            eprintln!(
-                "{0}.{1}. There is no solver for year {0} day {1}.",
-                args.year, day
-            );
+            eprintln!("{0}.{1}. There is no solver for year {0} day {1}.", args.year, day);
             failed = true;
         }
     }

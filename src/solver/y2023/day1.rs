@@ -20,9 +20,7 @@ impl FromStr for Day1 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        return Ok(Day1 {
-            input: s.to_owned(),
-        });
+        return Ok(Day1 { input: s.to_owned() });
     }
 }
 

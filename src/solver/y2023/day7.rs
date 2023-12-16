@@ -164,12 +164,10 @@ impl FromStr for Day7Part1 {
             .map(|mut iter| {
                 Ok::<_, anyhow::Error>((
                     CardHand::from_str(
-                        iter.next()
-                            .with_context(|| format!("Invalid input: {:?}", s))?,
+                        iter.next().with_context(|| format!("Invalid input: {:?}", s))?,
                     )?,
                     <u32>::from_str(
-                        iter.next()
-                            .with_context(|| format!("Invalid input: {:?}", s))?,
+                        iter.next().with_context(|| format!("Invalid input: {:?}", s))?,
                     )?,
                 ))
             })
@@ -197,12 +195,10 @@ impl FromStr for Day7Part2 {
             .map(|mut iter| {
                 Ok::<_, anyhow::Error>((
                     CardHandWithJoker::from_str(
-                        iter.next()
-                            .with_context(|| format!("Invalid input: {:?}", s))?,
+                        iter.next().with_context(|| format!("Invalid input: {:?}", s))?,
                     )?,
                     <u32>::from_str(
-                        iter.next()
-                            .with_context(|| format!("Invalid input: {:?}", s))?,
+                        iter.next().with_context(|| format!("Invalid input: {:?}", s))?,
                     )?,
                 ))
             })

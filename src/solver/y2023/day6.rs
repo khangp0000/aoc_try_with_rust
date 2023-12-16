@@ -92,9 +92,7 @@ impl ProblemSolver for Day6Part1 {
                     )
                 })
             })
-            .try_fold(1, |acc, res| {
-                res.map(|(left, right)| acc * (right - left + 1))
-            });
+            .try_fold(1, |acc, res| res.map(|(left, right)| acc * (right - left + 1)));
     }
 }
 
@@ -163,10 +161,7 @@ mod tests {
 
     #[test]
     fn test_sample() -> anyhow::Result<()> {
-        assert_eq!(
-            Day6::from_str(SAMPLE_INPUT)?.solve()?,
-            Result2Parts::new(288, 71503_i64)
-        );
+        assert_eq!(Day6::from_str(SAMPLE_INPUT)?.solve()?, Result2Parts::new(288, 71503_i64));
 
         Ok(())
     }

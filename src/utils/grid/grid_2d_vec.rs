@@ -58,11 +58,7 @@ impl<T> Grid2dVec<T> {
 
         let height = grid.len();
         let &width = predict_width.get_or_init(|| 0_usize);
-        return Ok(Self {
-            grid,
-            height,
-            width,
-        });
+        return Ok(Self { grid, height, width });
     }
 
     pub fn map_out_place<F: FnMut(usize, usize, &T) -> G, G>(&self, mut map_fn: F) -> Grid2dVec<G> {
@@ -72,10 +68,7 @@ impl<T> Grid2dVec<T> {
                 .iter()
                 .enumerate()
                 .map(|(y, v)| {
-                    v.iter()
-                        .enumerate()
-                        .map(|(x, t)| map_fn(x, y, t))
-                        .collect::<Vec<_>>()
+                    v.iter().enumerate().map(|(x, t)| map_fn(x, y, t)).collect::<Vec<_>>()
                 })
                 .collect::<Vec<_>>(),
             height: self.height,

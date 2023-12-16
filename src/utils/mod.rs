@@ -58,11 +58,9 @@ impl FromSScanfError for Error {
         pattern: &'static str,
     ) -> Error {
         return match err {
-            sscanf::Error::MatchFailed => Error::FailedToSScanf {
-                string_to_scan,
-                pattern,
-                source: None,
-            },
+            sscanf::Error::MatchFailed => {
+                Error::FailedToSScanf { string_to_scan, pattern, source: None }
+            }
             sscanf::Error::ParsingFailed(inner_error) => Error::FailedToSScanf {
                 string_to_scan,
                 pattern,
@@ -144,10 +142,7 @@ pub fn download_input_if_needed(
         Ok(_) => Ok(()),
         Err(e) => {
             fs::remove_file(target_path).with_context(|| {
-                format!(
-                    "Input file write failed but cannot delete for file path {:?}",
-                    target_path
-                )
+                format!("Input file write failed but cannot delete for file path {:?}", target_path)
             })?;
             return Err(e).with_context(|| format!("Input file write failed {:?}", target_path))?;
         }

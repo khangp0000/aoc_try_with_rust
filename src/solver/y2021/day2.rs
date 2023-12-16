@@ -35,11 +35,7 @@ impl FromStr for Day2 {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         return Ok(Day2 {
-            movements: s
-                .lines()
-                .map(Movement::from_str)
-                .map(Result::unwrap)
-                .collect(),
+            movements: s.lines().map(Movement::from_str).map(Result::unwrap).collect(),
         });
     }
 }
@@ -49,27 +45,21 @@ impl TwoPartsProblemSolver for Day2 {
     type Solution2Type = i32;
 
     fn solve_1(&self) -> Result<i32> {
-        let (x, y) = self
-            .movements
-            .iter()
-            .fold((0, 0), |(x, y), step| match step {
-                Forward(val) => (x + val, y),
-                Down(val) => (x, y + val),
-                Up(val) => (x, y - val),
-            });
+        let (x, y) = self.movements.iter().fold((0, 0), |(x, y), step| match step {
+            Forward(val) => (x + val, y),
+            Down(val) => (x, y + val),
+            Up(val) => (x, y - val),
+        });
 
         return Ok(x * y);
     }
 
     fn solve_2(&self) -> Result<i32> {
-        let (x, y, _) = self
-            .movements
-            .iter()
-            .fold((0, 0, 0), |(x, y, aim), step| match step {
-                Forward(val) => (x + val, y + aim * val, aim),
-                Down(val) => (x, y, aim + val),
-                Up(val) => (x, y, aim - val),
-            });
+        let (x, y, _) = self.movements.iter().fold((0, 0, 0), |(x, y, aim), step| match step {
+            Forward(val) => (x + val, y + aim * val, aim),
+            Down(val) => (x, y, aim + val),
+            Up(val) => (x, y, aim - val),
+        });
         return Ok(x * y);
     }
 }

@@ -43,11 +43,7 @@ fn predict_next_val(input: &Vec<i32>) -> anyhow::Result<i32> {
     while current.len() > 1 {
         sum += current.last().unwrap();
         current = Cow::Owned(
-            current
-                .iter()
-                .zip(current[1..].iter())
-                .map(|(l, r)| *r - *l)
-                .collect::<Vec<_>>(),
+            current.iter().zip(current[1..].iter()).map(|(l, r)| *r - *l).collect::<Vec<_>>(),
         );
     }
 
@@ -81,11 +77,7 @@ fn predict_prev_val(input: &Vec<i32>) -> anyhow::Result<i32> {
             adding = !adding;
         }
         current = Cow::Owned(
-            current
-                .iter()
-                .zip(current[1..].iter())
-                .map(|(l, r)| *r - *l)
-                .collect::<Vec<_>>(),
+            current.iter().zip(current[1..].iter()).map(|(l, r)| *r - *l).collect::<Vec<_>>(),
         );
     }
 

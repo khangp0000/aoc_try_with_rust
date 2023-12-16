@@ -20,21 +20,13 @@ impl<T: Integer> FromStr for Day5<T> {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let double_newline_regex = Regex::new(r"\r?\n\r?\n")?;
         let mut parts = double_newline_regex.split(s);
-        let seed_line = parts
-            .next()
-            .with_context(|| format!("No seed line found from input: {:?}", s))?;
+        let seed_line =
+            parts.next().with_context(|| format!("No seed line found from input: {:?}", s))?;
 
         let seeds = sscanf!(seed_line, "seeds: {str}").map_err(|e| {
-            anyhow!(
-                "Cannot parse seed line for input: {:?}\nDescription: {}",
-                seed_line,
-                e
-            )
+            anyhow!("Cannot parse seed line for input: {:?}\nDescription: {}", seed_line, e)
         })?;
-        let seeds = seeds
-            .split_whitespace()
-            .map(<T>::from_str)
-            .collect::<Result<_, T::Err>>()?;
+        let seeds = seeds.split_whitespace().map(<T>::from_str).collect::<Result<_, T::Err>>()?;
 
         let data: Vec<(String, Vec<(IntRange<T>, IntRange<T>)>)> = parts
             .map(|data_part| {
@@ -43,11 +35,7 @@ impl<T: Integer> FromStr for Day5<T> {
                     .next()
                     .with_context(|| format!("No map line found from input: {:?}", data_part))?;
                 let map_name = sscanf!(map_line, "{str} map:").map_err(|e| {
-                    anyhow!(
-                        "Cannot parse map line for input: {:?}\nDescription: {}",
-                        map_line,
-                        e
-                    )
+                    anyhow!("Cannot parse map line for input: {:?}\nDescription: {}", map_line, e)
                 })?;
                 let mut map_data = lines
                     .map(|line| {

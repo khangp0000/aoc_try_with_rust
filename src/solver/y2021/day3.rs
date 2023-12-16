@@ -58,21 +58,13 @@ impl TwoPartsProblemSolver for Day3 {
     }
 
     fn solve_2(&self) -> Result<u32> {
-        let mut current_set = self
-            .report
-            .iter()
-            .map(|val| (val, val.iter()))
-            .collect::<Vec<_>>();
+        let mut current_set = self.report.iter().map(|val| (val, val.iter())).collect::<Vec<_>>();
         while current_set.len() > 1 {
             current_set = get_next_set(current_set, false)?;
         }
         let o2: u32 = current_set[0].0.load_be();
 
-        let mut current_set = self
-            .report
-            .iter()
-            .map(|val| (val, val.iter()))
-            .collect::<Vec<_>>();
+        let mut current_set = self.report.iter().map(|val| (val, val.iter())).collect::<Vec<_>>();
         while current_set.len() > 1 {
             current_set = get_next_set(current_set, true)?;
         }
@@ -91,29 +83,24 @@ fn get_next_set<
     current_set: Vec<(&BitVec<S, O>, T)>,
     if_more_one_than_zero_keep_zero: bool,
 ) -> Result<Vec<(&BitVec<S, O>, T)>> {
-    let (next_set, compare_value) =
-        current_set
-            .into_iter()
-            .map(|(val, mut iter)| {
-                let next_bit = iter.next();
-                return Ok::<(&BitVec<_, _>, _, _), anyhow::Error>((
-                    val,
-                    iter,
-                    next_bit.context("Failed to get next bit").map(|b| {
-                        if *b {
-                            1_i32
-                        } else {
-                            -1_i32
-                        }
-                    })?,
-                ));
-            })
-            .try_fold((Vec::new(), 0), |(mut vec, mut acc), r| {
-                let (val, iter, one_value) = r?;
-                vec.push((val, one_value, iter));
-                acc += one_value;
-                return Ok::<_, anyhow::Error>((vec, acc));
-            })?;
+    let (next_set, compare_value) = current_set
+        .into_iter()
+        .map(|(val, mut iter)| {
+            let next_bit = iter.next();
+            return Ok::<(&BitVec<_, _>, _, _), anyhow::Error>((
+                val,
+                iter,
+                next_bit
+                    .context("Failed to get next bit")
+                    .map(|b| if *b { 1_i32 } else { -1_i32 })?,
+            ));
+        })
+        .try_fold((Vec::new(), 0), |(mut vec, mut acc), r| {
+            let (val, iter, one_value) = r?;
+            vec.push((val, one_value, iter));
+            acc += one_value;
+            return Ok::<_, anyhow::Error>((vec, acc));
+        })?;
     let more_one_than_zero = compare_value >= 0;
     return if more_one_than_zero {
         Ok(next_set

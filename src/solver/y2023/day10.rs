@@ -21,29 +21,26 @@ pub struct Day10Part1 {
 #[derive(Deref)]
 pub struct Day10Part2(Rc<Day10Part1>);
 
-const HORIZONTAL_PIPE: &'static Pipe = &Pipe {
-    entrances: enum_set!(GridDirection::West | GridDirection::East),
-};
+const CARDINAL: &[GridDirection; 4] =
+    &[GridDirection::North, GridDirection::South, GridDirection::East, GridDirection::West];
 
-const VERTICAL_PIPE: &'static Pipe = &Pipe {
-    entrances: enum_set!(GridDirection::South | GridDirection::North),
-};
+const HORIZONTAL_PIPE: &'static Pipe =
+    &Pipe { entrances: enum_set!(GridDirection::West | GridDirection::East) };
 
-const L_PIPE_NORTH_EAST: &'static Pipe = &Pipe {
-    entrances: enum_set!(GridDirection::North | GridDirection::East),
-};
+const VERTICAL_PIPE: &'static Pipe =
+    &Pipe { entrances: enum_set!(GridDirection::South | GridDirection::North) };
 
-const L_PIPE_NORTH_WEST: &'static Pipe = &Pipe {
-    entrances: enum_set!(GridDirection::North | GridDirection::West),
-};
+const L_PIPE_NORTH_EAST: &'static Pipe =
+    &Pipe { entrances: enum_set!(GridDirection::North | GridDirection::East) };
 
-const L_PIPE_SOUTH_WEST: &'static Pipe = &Pipe {
-    entrances: enum_set!(GridDirection::South | GridDirection::West),
-};
+const L_PIPE_NORTH_WEST: &'static Pipe =
+    &Pipe { entrances: enum_set!(GridDirection::North | GridDirection::West) };
 
-const L_PIPE_SOUTH_EAST: &'static Pipe = &Pipe {
-    entrances: enum_set!(GridDirection::South | GridDirection::East),
-};
+const L_PIPE_SOUTH_WEST: &'static Pipe =
+    &Pipe { entrances: enum_set!(GridDirection::South | GridDirection::West) };
+
+const L_PIPE_SOUTH_EAST: &'static Pipe =
+    &Pipe { entrances: enum_set!(GridDirection::South | GridDirection::East) };
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Display, Hash)]
 enum PipeKind {
@@ -147,9 +144,7 @@ impl FromStr for Day10Part1 {
 
         return Ok(Day10Part1 {
             grid,
-            start: starting_position
-                .into_inner()
-                .context("Cannot find starting position")?,
+            start: starting_position.into_inner().context("Cannot find starting position")?,
         });
     }
 }
@@ -166,17 +161,8 @@ impl Day10Part1 {
     fn find_pipe_loop(
         &self,
     ) -> anyhow::Result<Rc<(HashMap<(usize, usize), GridDirection>, GridDirection)>> {
-        const CARDINAL: &[GridDirection; 4] = &[
-            GridDirection::North,
-            GridDirection::South,
-            GridDirection::East,
-            GridDirection::West,
-        ];
-
-        let result = CARDINAL
-            .iter()
-            .map(|direction| (self.start, *direction))
-            .find_map(|start_state| {
+        let result =
+            CARDINAL.iter().map(|direction| (self.start, *direction)).find_map(|start_state| {
                 dfs(
                     start_state,
                     move |((prev_x, prev_y), prev_state_face)| {
@@ -236,28 +222,14 @@ impl ProblemSolver for Day10Part2 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        const CARDINAL: &[GridDirection; 4] = &[
-            GridDirection::North,
-            GridDirection::South,
-            GridDirection::East,
-            GridDirection::West,
-        ];
-
         let (loop_pipe, last_face) = Rc::try_unwrap(self.find_pipe_loop()?).unwrap();
         let grid = &self.grid.map_out_place(|x, y, t| {
-            if loop_pipe.contains_key(&(x, y)) {
-                *t
-            } else {
-                PositionKind::Ground
-            }
+            if loop_pipe.contains_key(&(x, y)) { *t } else { PositionKind::Ground }
         });
 
         let start_entrance = last_face.reverse();
         let (clock_wise, counter_clock_wise) = loop_pipe.iter().try_fold(
-            (
-                RefCell::new(Some(Vec::new())),
-                RefCell::new(Some(Vec::new())),
-            ),
+            (RefCell::new(Some(Vec::new())), RefCell::new(Some(Vec::new()))),
             |(mut clock_wise, counter_clock_wise), ((x, y), facing)| {
                 let mut non_facing = *facing;
                 let mut swapped = false;

@@ -18,13 +18,7 @@ where
     I: IntoIterator<Item = S>,
     AF: FnMut(&Rc<A>, &S) -> Rc<A>,
 {
-    dfs_full(
-        &mut vec![(acc_init, start)],
-        &mut HashSet::new(),
-        neighbor_fn,
-        end_state_fn,
-        acc_fn,
-    )
+    dfs_full(&mut vec![(acc_init, start)], &mut HashSet::new(), neighbor_fn, end_state_fn, acc_fn)
 }
 
 pub fn dfs_full<'a, S, N, E, I, A, AF>(

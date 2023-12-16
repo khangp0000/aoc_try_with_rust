@@ -14,9 +14,7 @@ impl FromStr for Day3 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        return Ok(Day3 {
-            board: s.lines().map(str::as_bytes).map(<[u8]>::to_vec).collect(),
-        });
+        return Ok(Day3 { board: s.lines().map(str::as_bytes).map(<[u8]>::to_vec).collect() });
     }
 }
 
@@ -47,10 +45,7 @@ impl TwoPartsProblemSolver for Day3 {
 impl Day3 {
     fn process_line_1(&self, idx: usize) -> Result<u64> {
         let mut sum = 0_u64;
-        let line = self
-            .board
-            .get(idx)
-            .with_context(|| format!("Invalid line number {}", idx))?;
+        let line = self.board.get(idx).with_context(|| format!("Invalid line number {}", idx))?;
         let mut curr_idx = 0;
         while curr_idx < line.len() {
             if let Some(first_digit_idx_from_curr_idx) =
@@ -58,9 +53,8 @@ impl Day3 {
             {
                 let left = curr_idx + first_digit_idx_from_curr_idx;
                 let right;
-                if let Some(int_len_minus_1) = (&line[(left + 1)..])
-                    .iter()
-                    .position(|c| !c.is_ascii_digit())
+                if let Some(int_len_minus_1) =
+                    (&line[(left + 1)..]).iter().position(|c| !c.is_ascii_digit())
                 {
                     right = left + int_len_minus_1 + 1;
                 } else {
@@ -110,9 +104,8 @@ impl Day3 {
             {
                 let left = curr_idx + first_digit_idx_from_curr_idx;
                 let right;
-                if let Some(int_len_minus_1) = (&line[(left + 1)..])
-                    .iter()
-                    .position(|c| !c.is_ascii_digit())
+                if let Some(int_len_minus_1) =
+                    (&line[(left + 1)..]).iter().position(|c| !c.is_ascii_digit())
                 {
                     right = left + int_len_minus_1 + 1;
                 } else {
@@ -127,11 +120,7 @@ impl Day3 {
                 if idx > 0 {
                     let prev_line = &self.board[idx - 1];
                     let line_len = prev_line.len();
-                    let c_right = if right == line_len {
-                        line_len
-                    } else {
-                        right + 1
-                    };
+                    let c_right = if right == line_len { line_len } else { right + 1 };
                     prev_line[c_left..c_right]
                         .iter()
                         .enumerate()
@@ -148,11 +137,7 @@ impl Day3 {
                 if idx < self.board.len() - 1 {
                     let next_line = &self.board[idx + 1];
                     let line_len = next_line.len();
-                    let c_right = if right == line_len {
-                        line_len
-                    } else {
-                        right + 1
-                    };
+                    let c_right = if right == line_len { line_len } else { right + 1 };
                     next_line[c_left..c_right]
                         .iter()
                         .enumerate()

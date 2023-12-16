@@ -54,10 +54,7 @@ fn parse_map_line(s: &str) -> Result<(String, (String, String))> {
                 "{str:/.../} = ({str:/.../}, {str:/.../})",
             )
         })?;
-    return Ok((
-        key.to_owned(),
-        (value_left.to_owned(), value_right.to_owned()),
-    ));
+    return Ok((key.to_owned(), (value_left.to_owned(), value_right.to_owned())));
 }
 
 impl FromStr for Day8Part1 {
@@ -66,10 +63,7 @@ impl FromStr for Day8Part1 {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut lines = s.lines();
         let directions = if let Some(direction_line) = lines.next() {
-            direction_line
-                .chars()
-                .map(Direction::try_from)
-                .collect::<anyhow::Result<Vec<_>>>()?
+            direction_line.chars().map(Direction::try_from).collect::<anyhow::Result<Vec<_>>>()?
         } else {
             bail!("Direction line is missing from input.")
         };

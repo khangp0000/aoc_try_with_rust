@@ -68,15 +68,8 @@ impl FromStr for Game {
         let game_number = sscanf!(game_number, "Game {u32}").map_err(|e| {
             crate::utils::Error::from_sscanf_err(&e, game_number.to_owned(), "Game {u32}")
         })?;
-        let bag = sets
-            .split(';')
-            .map(str::trim)
-            .map(CubeSet::from_str)
-            .collect::<Result<_>>()?;
-        return Ok(Game {
-            index: game_number,
-            bag,
-        });
+        let bag = sets.split(';').map(str::trim).map(CubeSet::from_str).collect::<Result<_>>()?;
+        return Ok(Game { index: game_number, bag });
     }
 }
 
@@ -84,12 +77,7 @@ impl FromStr for Day2 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        return Ok(Day2 {
-            games: s
-                .lines()
-                .map(Game::from_str)
-                .collect::<anyhow::Result<_>>()?,
-        });
+        return Ok(Day2 { games: s.lines().map(Game::from_str).collect::<anyhow::Result<_>>()? });
     }
 }
 
@@ -116,11 +104,7 @@ impl TwoPartsProblemSolver for Day2 {
             .iter()
             .map(|game| {
                 game.bag.iter().fold(
-                    CubeSet {
-                        red: 0_u32,
-                        green: 0_u32,
-                        blue: 0_u32,
-                    },
+                    CubeSet { red: 0_u32, green: 0_u32, blue: 0_u32 },
                     |mut left, right| {
                         left.red = max(left.red, right.red);
                         left.green = max(left.green, right.green);

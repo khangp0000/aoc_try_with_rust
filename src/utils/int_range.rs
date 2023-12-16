@@ -33,11 +33,7 @@ impl<T: Integer> IntRange<T> {
     }
 
     pub fn intersect(&self, other: &Self) -> Option<Self> {
-        let (left, right) = if self.start < other.start {
-            (self, other)
-        } else {
-            (other, self)
-        };
+        let (left, right) = if self.start < other.start { (self, other) } else { (other, self) };
 
         if left.end >= right.end {
             return Some(right.clone());
@@ -63,11 +59,7 @@ impl<T: Integer> IntRange<T> {
     }
 
     pub fn coalesce(&self, other: &Self) -> Option<Self> {
-        let (left, right) = if self.start < other.start {
-            (self, other)
-        } else {
-            (other, self)
-        };
+        let (left, right) = if self.start < other.start { (self, other) } else { (other, self) };
 
         if left.end < right.start && (left.end + T::one() == right.start) {
             return Some(Self::new(left.start, right.end).ok().unwrap());
@@ -83,10 +75,7 @@ impl<'a, T: Integer> Add<T> for &'a IntRange<T> {
     type Output = IntRange<T>;
 
     fn add(self, rhs: T) -> Self::Output {
-        return IntRange {
-            start: self.start + rhs,
-            end: self.end + rhs,
-        };
+        return IntRange { start: self.start + rhs, end: self.end + rhs };
     }
 }
 
@@ -94,10 +83,7 @@ impl<'a, T: Integer> Sub<T> for &'a IntRange<T> {
     type Output = IntRange<T>;
 
     fn sub(self, rhs: T) -> Self::Output {
-        return IntRange {
-            start: self.start - rhs,
-            end: self.end - rhs,
-        };
+        return IntRange { start: self.start - rhs, end: self.end - rhs };
     }
 }
 
@@ -105,10 +91,7 @@ impl<T: Integer> Add<T> for IntRange<T> {
     type Output = IntRange<T>;
 
     fn add(self, rhs: T) -> Self::Output {
-        return IntRange {
-            start: self.start + rhs,
-            end: self.end + rhs,
-        };
+        return IntRange { start: self.start + rhs, end: self.end + rhs };
     }
 }
 
@@ -116,10 +99,7 @@ impl<T: Integer> Sub<T> for IntRange<T> {
     type Output = IntRange<T>;
 
     fn sub(self, rhs: T) -> Self::Output {
-        return IntRange {
-            start: self.start - rhs,
-            end: self.end - rhs,
-        };
+        return IntRange { start: self.start - rhs, end: self.end - rhs };
     }
 }
 
