@@ -1,5 +1,6 @@
 use crate::solver::TwoPartsProblemSolver;
 use crate::utils::FromSScanfError;
+use anyhow::Result;
 use sscanf::sscanf;
 use std::cmp::max;
 use std::str::FromStr;
@@ -71,7 +72,7 @@ impl FromStr for Game {
             .split(';')
             .map(str::trim)
             .map(CubeSet::from_str)
-            .collect::<Result<_, _>>()?;
+            .collect::<Result<_>>()?;
         return Ok(Game {
             index: game_number,
             bag,
@@ -84,7 +85,10 @@ impl FromStr for Day2 {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         return Ok(Day2 {
-            games: s.lines().map(Game::from_str).collect::<Result<_, _>>()?,
+            games: s
+                .lines()
+                .map(Game::from_str)
+                .collect::<anyhow::Result<_>>()?,
         });
     }
 }
@@ -137,7 +141,7 @@ mod tests {
     use indoc::indoc;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT: &str = indoc! {"
+    const SAMPLE_INPUT: &str = indoc! {"
             Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
             Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
             Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red

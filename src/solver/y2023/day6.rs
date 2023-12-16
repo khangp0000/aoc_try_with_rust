@@ -1,11 +1,10 @@
+use crate::solver::{combine_solver, ProblemSolver};
+use crate::utils::int_trait::Integer;
 use anyhow::Context;
-use num::{FromPrimitive, PrimInt};
+use anyhow::Result;
+use derive_more::FromStr;
 
-use crate::solver::{ProblemSolver, TwoSolversCombined};
-use derive_more::{Deref, FromStr};
-
-#[derive(Deref, FromStr)]
-pub struct Day6(TwoSolversCombined<Day6Part1, Day6Part2>);
+combine_solver! {Day6, Day6Part1, Day6Part2}
 
 pub struct Day6Part1 {
     times: Vec<i32>,
@@ -29,14 +28,16 @@ impl FromStr for Day6Part1 {
                 .split_whitespace()
                 .skip(1)
                 .map(<i32>::from_str)
-                .collect::<Result<_, _>>()?,
+                .map(|res| res.map_err(anyhow::Error::from))
+                .collect::<Result<_>>()?,
             distances: lines
                 .next()
                 .with_context(|| format!("Invalid input: {}", s))?
                 .split_whitespace()
                 .skip(1)
                 .map(<i32>::from_str)
-                .collect::<Result<_, _>>()?,
+                .map(|res| res.map_err(anyhow::Error::from))
+                .collect::<Result<_>>()?,
         });
     }
 }
@@ -76,9 +77,9 @@ impl FromStr for Day6Part2 {
     }
 }
 
-impl ProblemSolver<Day6Part1> for Day6Part1 {
+impl ProblemSolver for Day6Part1 {
     type SolutionType = i32;
-    fn solve(&self) -> anyhow::Result<i32> {
+    fn solve(&self) -> Result<i32> {
         return self
             .times
             .iter()
@@ -97,9 +98,9 @@ impl ProblemSolver<Day6Part1> for Day6Part1 {
     }
 }
 
-impl ProblemSolver<Day6Part2> for Day6Part2 {
+impl ProblemSolver for Day6Part2 {
     type SolutionType = i64;
-    fn solve(&self) -> anyhow::Result<i64> {
+    fn solve(&self) -> Result<i64> {
         let (left, right) = find_time_hold_range(self.time, self.distance).with_context(|| {
             format!(
                 "Failed to solve for pair time {} and distance record {}",
@@ -110,8 +111,8 @@ impl ProblemSolver<Day6Part2> for Day6Part2 {
     }
 }
 
-fn find_time_hold_range<T: PrimInt + FromPrimitive>(time: T, record: T) -> Option<(T, T)> {
-    let delta = time * time - (record << 2);
+fn find_time_hold_range<T: Integer>(time: T, record: T) -> Option<(T, T)> {
+    let delta = time * time - (record << 2_u32);
     if delta < T::zero() {
         return None;
     }
@@ -140,15 +141,16 @@ mod tests {
     use crate::utils::Result2Parts;
     use indoc::indoc;
 
+    use anyhow::Result;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT: &str = indoc! {"
+    const SAMPLE_INPUT: &str = indoc! {"
             Time:      7  15   30
             Distance:  9  40  200
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day6::from_str(SAMPLE_INPUT)?.solve_1()?, 288);
         Ok(())
     }

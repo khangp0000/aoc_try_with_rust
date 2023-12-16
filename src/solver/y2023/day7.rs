@@ -1,11 +1,9 @@
+use crate::solver::{combine_solver, ProblemSolver};
 use anyhow::{bail, Context};
+use derive_more::{Deref, Display, FromStr};
 use std::collections::BinaryHeap;
 
-use crate::solver::{ProblemSolver, TwoSolversCombined};
-use derive_more::{Deref, Display, FromStr};
-
-#[derive(Deref, FromStr)]
-pub struct Day7(TwoSolversCombined<Day7Part1, Day7Part2>);
+combine_solver! {Day7, Day7Part1, Day7Part2}
 
 #[derive(Deref)]
 pub struct Day7Part1(Vec<(CardHand, u32)>);
@@ -175,13 +173,13 @@ impl FromStr for Day7Part1 {
                     )?,
                 ))
             })
-            .collect::<Result<_, _>>()?;
+            .collect::<anyhow::Result<_>>()?;
         cards.sort_unstable();
         return Ok(Day7Part1(cards));
     }
 }
 
-impl ProblemSolver<Day7Part1> for Day7Part1 {
+impl ProblemSolver for Day7Part1 {
     type SolutionType = u32;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
@@ -192,7 +190,7 @@ impl ProblemSolver<Day7Part1> for Day7Part1 {
 impl FromStr for Day7Part2 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
         let mut cards: Vec<_> = s
             .lines()
             .map(|line| line.split_whitespace())
@@ -208,13 +206,13 @@ impl FromStr for Day7Part2 {
                     )?,
                 ))
             })
-            .collect::<Result<_, _>>()?;
+            .collect::<anyhow::Result<_>>()?;
         cards.sort_unstable();
         return Ok(Day7Part2(cards));
     }
 }
 
-impl ProblemSolver<Day7Part2> for Day7Part2 {
+impl ProblemSolver for Day7Part2 {
     type SolutionType = u32;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
@@ -237,7 +235,7 @@ mod tests {
     use indoc::indoc;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT: &str = indoc! {"
+    const SAMPLE_INPUT: &str = indoc! {"
             32T3K 765
             T55J5 684
             KK677 28

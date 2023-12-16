@@ -1,4 +1,5 @@
 use crate::solver::TwoPartsProblemSolver;
+use anyhow::Result;
 use anyhow::{anyhow, Context};
 use bitvec::field::BitField;
 use bitvec::order::{BitOrder, Msb0};
@@ -28,7 +29,7 @@ impl FromStr for Day3 {
                         })
                         .collect()
                 })
-                .collect::<Result<_, _>>()?,
+                .collect::<Result<_>>()?,
         });
     }
 }
@@ -37,7 +38,7 @@ impl TwoPartsProblemSolver for Day3 {
     type Solution1Type = u32;
     type Solution2Type = u32;
 
-    fn solve_1(&self) -> anyhow::Result<u32> {
+    fn solve_1(&self) -> Result<u32> {
         let (gamma_bit, epsilon_bit) = self
             .report
             .iter()
@@ -56,7 +57,7 @@ impl TwoPartsProblemSolver for Day3 {
         Ok(gamma * epsilon)
     }
 
-    fn solve_2(&self) -> anyhow::Result<u32> {
+    fn solve_2(&self) -> Result<u32> {
         let mut current_set = self
             .report
             .iter()
@@ -89,7 +90,7 @@ fn get_next_set<
 >(
     current_set: Vec<(&BitVec<S, O>, T)>,
     if_more_one_than_zero_keep_zero: bool,
-) -> anyhow::Result<Vec<(&BitVec<S, O>, T)>> {
+) -> Result<Vec<(&BitVec<S, O>, T)>> {
     let (next_set, compare_value) =
         current_set
             .into_iter()
@@ -137,7 +138,7 @@ mod tests {
     use indoc::indoc;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT: &str = indoc! {"
+    const SAMPLE_INPUT: &str = indoc! {"
             00100
             11110
             10110

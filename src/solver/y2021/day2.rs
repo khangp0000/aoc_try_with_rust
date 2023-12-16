@@ -82,7 +82,7 @@ mod tests {
     use indoc::indoc;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT: &str = indoc! {"
+    const SAMPLE_INPUT: &str = indoc! {"
             forward 5
             down 5
             forward 8

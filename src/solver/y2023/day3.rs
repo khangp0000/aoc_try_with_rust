@@ -1,4 +1,5 @@
 use crate::solver::TwoPartsProblemSolver;
+use anyhow::Result;
 use anyhow::{bail, Context};
 use std::cell::OnceCell;
 use std::cmp::min;
@@ -23,16 +24,16 @@ impl TwoPartsProblemSolver for Day3 {
     type Solution1Type = u64;
     type Solution2Type = u64;
 
-    fn solve_1(&self) -> anyhow::Result<u64> {
+    fn solve_1(&self) -> Result<u64> {
         return (0..self.board.len()).map(|i| self.process_line_1(i)).sum();
     }
 
-    fn solve_2(&self) -> anyhow::Result<u64> {
+    fn solve_2(&self) -> Result<u64> {
         let mut container = HashMap::new();
 
         (0..self.board.len())
             .map(|i| self.process_line_2(&mut container, i))
-            .collect::<anyhow::Result<()>>()?;
+            .collect::<Result<()>>()?;
 
         let sum_prod: u64 = container
             .iter()
@@ -44,7 +45,7 @@ impl TwoPartsProblemSolver for Day3 {
 }
 
 impl Day3 {
-    fn process_line_1(&self, idx: usize) -> anyhow::Result<u64> {
+    fn process_line_1(&self, idx: usize) -> Result<u64> {
         let mut sum = 0_u64;
         let line = self
             .board
@@ -100,7 +101,7 @@ impl Day3 {
         &self,
         container: &mut HashMap<(usize, usize), Vec<u64>>,
         idx: usize,
-    ) -> anyhow::Result<()> {
+    ) -> Result<()> {
         let line = &self.board[idx];
         let mut curr_idx = 0;
         while curr_idx < line.len() {
@@ -212,7 +213,7 @@ mod tests {
     use indoc::indoc;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT: &str = indoc! {"
+    const SAMPLE_INPUT: &str = indoc! {"
             467..114..
             ...*......
             ..35..633.

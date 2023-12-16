@@ -1,7 +1,12 @@
+pub mod graph;
+pub mod grid;
 pub mod int_range;
+pub mod int_trait;
+
+use anyhow::Result;
 
 use crate::solver::ProblemSolver;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context};
 use reqwest::blocking::Client;
 
 use derive_more::Deref;
@@ -16,7 +21,7 @@ use thiserror::Error;
 macro_rules! boxed_try_get_input_and_solve {
     ($solver:ty) => {
         |year, day, base_input_path, session_file_path| {
-            crate::utils::try_get_input_and_solve::<$solver, _, _>(
+            crate::utils::try_get_input_and_solve::<$solver, _>(
                 year,
                 day,
                 base_input_path,
@@ -158,7 +163,7 @@ pub trait GetInputAndSolver<T: Display> {
     ) -> Result<T>;
 }
 
-pub fn try_get_input_and_solve<P: ProblemSolver<B, SolutionType = T>, T: Display, B>(
+pub fn try_get_input_and_solve<P: ProblemSolver<SolutionType = T>, T: Display>(
     year: u16,
     day: u8,
     base_input_path: &Path,

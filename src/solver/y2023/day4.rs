@@ -1,7 +1,7 @@
 use crate::solver::TwoPartsProblemSolver;
+use anyhow::Result;
 use std::cmp::min;
 use std::collections::HashSet;
-use std::num::ParseIntError;
 use std::str::FromStr;
 
 pub struct Day4 {
@@ -23,7 +23,7 @@ impl FromStr for Day4 {
                         parse_vec_u32_white_space_delimiter(r)?,
                     ))
                 })
-                .collect::<Result<_, _>>()?,
+                .collect::<Result<_>>()?,
         });
     }
 }
@@ -32,7 +32,7 @@ impl TwoPartsProblemSolver for Day4 {
     type Solution1Type = u64;
     type Solution2Type = u64;
 
-    fn solve_1(&self) -> anyhow::Result<u64> {
+    fn solve_1(&self) -> Result<u64> {
         return Ok(self
             .cards
             .iter()
@@ -42,7 +42,7 @@ impl TwoPartsProblemSolver for Day4 {
             .sum());
     }
 
-    fn solve_2(&self) -> anyhow::Result<u64> {
+    fn solve_2(&self) -> Result<u64> {
         let num_card = self.cards.len();
         let mut counts = vec![1_u64; num_card];
         for (index, (l, r)) in self.cards.iter().enumerate() {
@@ -56,24 +56,24 @@ impl TwoPartsProblemSolver for Day4 {
     }
 }
 
-fn parse_vec_u32_white_space_delimiter<B: FromIterator<u32>>(
-    input: &str,
-) -> Result<B, ParseIntError> {
+fn parse_vec_u32_white_space_delimiter<B: FromIterator<u32>>(input: &str) -> Result<B> {
     return input
         .split_whitespace()
         .filter(|&s| !s.is_empty())
         .map(<u32>::from_str)
-        .collect::<Result<B, _>>();
+        .map(|res| res.map_err(anyhow::Error::from))
+        .collect::<Result<B>>();
 }
 
 #[cfg(test)]
 mod tests {
     use crate::solver::y2023::day4::Day4;
     use crate::solver::TwoPartsProblemSolver;
+    use anyhow::Result;
     use indoc::indoc;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT: &str = indoc! {"
+    const SAMPLE_INPUT: &str = indoc! {"
             Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
             Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
             Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
@@ -83,13 +83,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day4::from_str(SAMPLE_INPUT)?.solve_1()?, 13);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day4::from_str(SAMPLE_INPUT)?.solve_2()?, 30);
         Ok(())
     }

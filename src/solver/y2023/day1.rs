@@ -1,4 +1,5 @@
 use crate::solver::TwoPartsProblemSolver;
+use anyhow::Result;
 use regex::Regex;
 use std::str::FromStr;
 use thiserror::Error;
@@ -18,7 +19,7 @@ pub struct Day1 {
 impl FromStr for Day1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         return Ok(Day1 {
             input: s.to_owned(),
         });
@@ -29,7 +30,7 @@ impl TwoPartsProblemSolver for Day1 {
     type Solution1Type = u32;
     type Solution2Type = u32;
 
-    fn solve_1(&self) -> anyhow::Result<u32> {
+    fn solve_1(&self) -> Result<u32> {
         let mut sum = 0_u32;
         for line in self.input.lines() {
             sum += line
@@ -50,7 +51,7 @@ impl TwoPartsProblemSolver for Day1 {
         return Ok(sum);
     }
 
-    fn solve_2(&self) -> anyhow::Result<u32> {
+    fn solve_2(&self) -> Result<u32> {
         let forward_search =
             Regex::new(r"(one)|(two)|(three)|(four)|(five)|(six)|(seven)|(eight)|(nine)|\d")?;
         let backward_search =
@@ -75,7 +76,7 @@ impl TwoPartsProblemSolver for Day1 {
     }
 }
 
-fn str_or_rev_digit_to_u32(s: &str) -> anyhow::Result<u32> {
+fn str_or_rev_digit_to_u32(s: &str) -> Result<u32> {
     return Ok(match s {
         "one" | "eno" => 1u32,
         "two" | "owt" => 2u32,
@@ -94,17 +95,18 @@ fn str_or_rev_digit_to_u32(s: &str) -> anyhow::Result<u32> {
 mod tests {
     use crate::solver::y2023::day1::Day1;
     use crate::solver::TwoPartsProblemSolver;
+    use anyhow::Result;
     use indoc::indoc;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT_1: &str = indoc! {"
+    const SAMPLE_INPUT_1: &str = indoc! {"
             1abc2
             pqr3stu8vwx
             a1b2c3d4e5f
             treb7uchet
     "};
 
-    static SAMPLE_INPUT_2: &str = indoc! {"
+    const SAMPLE_INPUT_2: &str = indoc! {"
             two1nine
             eightwothree
             abcone2threexyz
@@ -115,13 +117,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day1::from_str(SAMPLE_INPUT_1)?.solve_1()?, 142);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day1::from_str(SAMPLE_INPUT_2)?.solve_2()?, 281);
         Ok(())
     }

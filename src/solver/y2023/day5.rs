@@ -1,29 +1,20 @@
 use crate::solver::TwoPartsProblemSolver;
 use crate::utils::int_range::IntRange;
+use crate::utils::int_trait::Integer;
+use anyhow::Result;
 use anyhow::{anyhow, bail, Context};
-use std::borrow::Cow;
-
-use derive_more::Display;
-use num::PrimInt;
 use regex::Regex;
 use sscanf::sscanf;
-
+use std::borrow::Cow;
 use std::cmp::min;
-
-use std::fmt::Debug;
-
-use std::num::ParseIntError;
-
 use std::str::FromStr;
 
-pub struct Day5<T: PrimInt> {
+pub struct Day5<T: Integer> {
     seeds: Vec<T>,
     data: Vec<(String, Vec<(IntRange<T>, IntRange<T>)>)>,
 }
 
-impl<T: PrimInt + FromStr<Err = ParseIntError> + Debug + Send + Sync + Display + 'static> FromStr
-    for Day5<T>
-{
+impl<T: Integer> FromStr for Day5<T> {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -79,23 +70,23 @@ impl<T: PrimInt + FromStr<Err = ParseIntError> + Debug + Send + Sync + Display +
                             ))
                         })
                     })
-                    .collect::<Result<Result<Vec<_>, _>, _>>()??;
+                    .collect::<Result<Result<Vec<_>>>>()??;
                 map_data.sort_unstable();
                 return Ok::<_, anyhow::Error>((map_name.to_owned(), map_data));
             })
-            .collect::<Result<_, _>>()?;
+            .collect::<Result<_>>()?;
         return Ok(Day5 { seeds, data });
     }
 }
 
 impl<T> TwoPartsProblemSolver for Day5<T>
 where
-    T: PrimInt + Display + Debug + Send + Sync + FromStr<Err = ParseIntError> + 'static,
+    T: Integer,
 {
     type Solution1Type = T;
     type Solution2Type = T;
 
-    fn solve_1(&self) -> anyhow::Result<T> {
+    fn solve_1(&self) -> Result<T> {
         let mut seeds: Box<dyn Iterator<Item = T>> = Box::new(self.seeds.iter().map(T::clone));
         for (_, map) in &self.data {
             seeds = Box::new(seeds.map(move |s| get_from_range_to_range_maps(map, &s)))
@@ -103,12 +94,12 @@ where
         return seeds.try_fold(T::max_value(), |a, b| Ok(min(a, b)));
     }
 
-    fn solve_2(&self) -> anyhow::Result<T> {
+    fn solve_2(&self) -> Result<T> {
         let seeds = self
             .seeds
             .chunks(2)
             .map(|v| IntRange::new(v[0], v[0] + (v[1] - T::one())))
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>>>()?;
 
         return Ok(self
             .data
@@ -127,7 +118,7 @@ where
 
 fn get_from_range_to_range_maps<
     'a,
-    T: PrimInt + Debug + 'a,
+    T: Integer,
     II: IntoIterator<Item = &'a (IntRange<T>, IntRange<T>)>,
 >(
     range_to_range_maps: II,
@@ -141,7 +132,7 @@ fn get_from_range_to_range_maps<
     return *source;
 }
 
-fn try_get_from_one_range_map<T: PrimInt + Debug>(
+fn try_get_from_one_range_map<T: Integer>(
     source_map: &IntRange<T>,
     dest_map: &IntRange<T>,
     source: &T,
@@ -157,7 +148,7 @@ fn get_range_from_range_to_range_maps<'a, T, MI>(
     sources: &'a [IntRange<T>],
 ) -> Vec<IntRange<T>>
 where
-    T: PrimInt + Debug + 'a,
+    T: Integer,
     MI: IntoIterator<Item = &'a (IntRange<T>, IntRange<T>)>,
 {
     let (mut final_res, mut remainder) = range_to_range_maps.into_iter().fold(
@@ -182,7 +173,7 @@ fn get_range_from_one_range_to_range_map<'a, T, V>(
     dest_range: &IntRange<T>,
 ) -> (Vec<IntRange<T>>, Vec<IntRange<T>>)
 where
-    T: PrimInt + Debug + 'a,
+    T: Integer,
     V: IntoIterator<Item = &'a IntRange<T>>,
 {
     return sources
@@ -210,7 +201,7 @@ mod tests {
     use indoc::indoc;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT: &str = indoc! {"
+    const SAMPLE_INPUT: &str = indoc! {"
             seeds: 79 14 55 13
 
             seed-to-soil map:

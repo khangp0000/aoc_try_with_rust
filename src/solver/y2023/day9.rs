@@ -1,17 +1,16 @@
+use crate::solver::{share_struct_solver, ProblemSolver};
 use anyhow::bail;
-use std::borrow::Cow;
-
-use crate::solver::{ProblemSolver, TwoSolversCombined};
 use derive_more::{Deref, FromStr};
+use std::borrow::Cow;
+use std::rc::Rc;
 
-#[derive(Deref, FromStr)]
-pub struct Day9(TwoSolversCombined<Day9Part1, Day9Part2>);
+share_struct_solver!(Day9, Day9Part1, Day9Part2);
 
 #[derive(Deref)]
 pub struct Day9Part1(Vec<Vec<i32>>);
 
-#[derive(Deref, FromStr)]
-pub struct Day9Part2(Day9Part1);
+#[derive(Deref)]
+pub struct Day9Part2(Rc<Day9Part1>);
 
 impl FromStr for Day9Part1 {
     type Err = anyhow::Error;
@@ -23,14 +22,14 @@ impl FromStr for Day9Part1 {
                     line.split_whitespace()
                         .map(<i32>::from_str)
                         .map(|r| r.map_err(anyhow::Error::from))
-                        .collect::<Result<Vec<_>, _>>()
+                        .collect::<anyhow::Result<Vec<_>>>()
                 })
-                .collect::<Result<Vec<_>, _>>()?,
+                .collect::<anyhow::Result<Vec<_>>>()?,
         ));
     }
 }
 
-impl ProblemSolver<Day9Part1> for Day9Part1 {
+impl ProblemSolver for Day9Part1 {
     type SolutionType = i32;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
@@ -59,7 +58,7 @@ fn predict_next_val(input: &Vec<i32>) -> anyhow::Result<i32> {
     return Ok(sum);
 }
 
-impl ProblemSolver<Day9Part2> for Day9Part2 {
+impl ProblemSolver for Day9Part2 {
     type SolutionType = i32;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
@@ -104,7 +103,7 @@ mod tests {
     use indoc::indoc;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT: &str = indoc! {"
+    const SAMPLE_INPUT: &str = indoc! {"
             0 3 6 9 12 15
             1 3 6 10 15 21
             10 13 16 21 30 45

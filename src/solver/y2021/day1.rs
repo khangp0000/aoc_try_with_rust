@@ -11,7 +11,11 @@ impl FromStr for Day1 {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         return Ok(Day1 {
-            report: s.lines().map(<u32>::from_str).collect::<Result<_, _>>()?,
+            report: s
+                .lines()
+                .map(<u32>::from_str)
+                .map(|r| r.map_err(anyhow::Error::from))
+                .collect::<Result<_>>()?,
         });
     }
 }
@@ -46,7 +50,7 @@ mod tests {
     use indoc::indoc;
     use std::str::FromStr;
 
-    static SAMPLE_INPUT: &str = indoc! {"
+    const SAMPLE_INPUT: &str = indoc! {"
             199
             200
             208

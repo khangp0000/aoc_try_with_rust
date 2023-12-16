@@ -1,4 +1,5 @@
 use anyhow::bail;
+use anyhow::Result;
 use clap::Parser;
 use solver::AOC_PROBLEMS_SOLVER;
 use std::path::PathBuf;
@@ -29,7 +30,7 @@ struct Args {
     days: Vec<u8>,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
     let solvers = AOC_PROBLEMS_SOLVER.get_entry(&args.year);
     let (day_mapper_solvers, mut days) = match &solvers {
@@ -76,8 +77,8 @@ mod tests {
     use anyhow::Result;
     use std::path::PathBuf;
 
-    static SESSION_PATH: &str = "data/session.txt";
-    static INPUT_FOLDER_PATH: &str = "data";
+    const SESSION_PATH: &str = "data/session.txt";
+    const INPUT_FOLDER_PATH: &str = "data";
 
     fn run(year: u16, day: u8) -> Result<()> {
         let result = AOC_PROBLEMS_SOLVER[&year][&day](
@@ -97,17 +98,17 @@ mod tests {
     }
 
     #[test]
-    fn day2() -> Result<()> {
+    fn day2() -> anyhow::Result<()> {
         return run(2023, 2);
     }
 
     #[test]
-    fn day3() -> Result<()> {
+    fn day3() -> anyhow::Result<()> {
         return run(2023, 3);
     }
 
     #[test]
-    fn day4() -> Result<()> {
+    fn day4() -> anyhow::Result<()> {
         return run(2023, 4);
     }
 }

@@ -1,29 +1,28 @@
+use crate::solver::{share_struct_solver, ProblemSolver};
+use crate::utils::{FromSScanfError, WarningResult};
+use anyhow::Result;
 use anyhow::{anyhow, bail};
+use derive_more::{Deref, Display, FromStr};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::ops::ControlFlow;
-
-use crate::solver::{ProblemSolver, TwoSolversCombined};
-use derive_more::{Deref, Display, FromStr};
-
-use crate::utils::{FromSScanfError, WarningResult};
+use std::rc::Rc;
 use thiserror::Error;
 
-static MAX_MAP_COUNT: usize = 100000_usize;
+const MAX_MAP_COUNT: usize = 100000_usize;
 
-#[derive(Deref, FromStr)]
-pub struct Day8(TwoSolversCombined<Day8Part1, Day8Part2>);
+share_struct_solver! {Day8, Day8Part1, Day8Part2}
 
 pub struct Day8Part1 {
     directions: Vec<Direction>,
     map: HashMap<String, (String, String)>,
 }
 
-#[derive(Deref, FromStr)]
-pub struct Day8Part2(Day8Part1);
+#[derive(Deref)]
+pub struct Day8Part2(Rc<Day8Part1>);
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Display, Debug)]
-pub enum Direction {
+enum Direction {
     Left,
     Right,
 }
@@ -46,7 +45,7 @@ impl TryFrom<char> for Direction {
     }
 }
 
-fn parse_map_line(s: &str) -> anyhow::Result<(String, (String, String))> {
+fn parse_map_line(s: &str) -> Result<(String, (String, String))> {
     let (key, value_left, value_right) =
         sscanf::sscanf!(s, "{str:/.../} = ({str:/.../}, {str:/.../})").map_err(|e| {
             crate::utils::Error::from_sscanf_err(
@@ -70,7 +69,7 @@ impl FromStr for Day8Part1 {
             direction_line
                 .chars()
                 .map(Direction::try_from)
-                .collect::<Result<Vec<_>, _>>()?
+                .collect::<anyhow::Result<Vec<_>>>()?
         } else {
             bail!("Direction line is missing from input.")
         };
@@ -83,12 +82,12 @@ impl FromStr for Day8Part1 {
             bail!("Separation empty line is missing from input.")
         }
 
-        let map = lines.map(parse_map_line).collect::<Result<_, _>>()?;
+        let map = lines.map(parse_map_line).collect::<anyhow::Result<_>>()?;
         return Ok(Day8Part1 { directions, map });
     }
 }
 
-impl ProblemSolver<Day8Part1> for Day8Part1 {
+impl ProblemSolver for Day8Part1 {
     type SolutionType = u32;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
@@ -117,7 +116,7 @@ impl ProblemSolver<Day8Part1> for Day8Part1 {
     }
 }
 
-impl ProblemSolver<Day8Part2> for Day8Part2 {
+impl ProblemSolver for Day8Part2 {
     type SolutionType = WarningResult<usize>;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
@@ -130,7 +129,7 @@ impl ProblemSolver<Day8Part2> for Day8Part2 {
                         Direction::Right => value_right,
                     }
                 ).ok_or_else(|| anyhow!("Cannot find value for key {:?}", key)))
-                    .collect::<Result<Vec<_>, _>>();
+                    .collect::<anyhow::Result<Vec<_>>>();
 
                 return match res {
                     Ok(new_keys) => {
@@ -166,7 +165,7 @@ mod tests {
 
     use std::str::FromStr;
 
-    static SAMPLE_INPUT_1: &str = indoc! {"
+    const SAMPLE_INPUT_1: &str = indoc! {"
             LLR
 
             AAA = (BBB, BBB)
@@ -174,7 +173,7 @@ mod tests {
             ZZZ = (ZZZ, ZZZ)
     "};
 
-    static SAMPLE_INPUT_2: &str = indoc! {"
+    const SAMPLE_INPUT_2: &str = indoc! {"
             LR
 
             11A = (11B, XXX)
