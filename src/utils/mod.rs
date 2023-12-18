@@ -55,23 +55,23 @@ pub struct WarningResult<T> {
 
 impl<T1: Display, T2: Display> Display for Result2Parts<T1, T2> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "<part 1: {}, part 2: {}>", self.res_1, self.res_2);
+        write!(f, "<part 1: {}, part 2: {}>", self.res_1, self.res_2)
     }
 }
 
 impl<T: Display> Display for WarningResult<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "{} --{}--", self.res, self.warning);
+        write!(f, "{} --{}--", self.res, self.warning)
     }
 }
 
 fn reqwest_client() -> &'static Client {
     static REQWEST_CLIENT: OnceLock<Client> = OnceLock::new();
-    return REQWEST_CLIENT.get_or_init(|| Client::new());
+    return REQWEST_CLIENT.get_or_init(Client::new);
 }
 
 fn get_input_path(base_input_path: &Path, year: u16, day: u8) -> PathBuf {
-    return base_input_path.join(format!("y{}/day{}.txt", year, day));
+    base_input_path.join(format!("y{}/day{}.txt", year, day))
 }
 
 pub fn download_input_if_needed(
@@ -108,15 +108,15 @@ pub fn download_input_if_needed(
     let mut output = File::create(target_path)
         .with_context(|| format!("Failed to create file path {:?}", target_path))?;
     let write_result = response.copy_to(&mut output);
-    return match write_result {
+    match write_result {
         Ok(_) => Ok(()),
         Err(e) => {
             fs::remove_file(target_path).with_context(|| {
                 format!("Input file write failed but cannot delete for file path {:?}", target_path)
             })?;
-            return Err(e).with_context(|| format!("Input file write failed {:?}", target_path))?;
+            Err(e).with_context(|| format!("Input file write failed {:?}", target_path))?
         }
-    };
+    }
 }
 
 pub trait GetInputAndSolver<T: Display> {
@@ -135,7 +135,7 @@ pub fn try_get_input_and_solve<P: ProblemSolver<SolutionType = T>, T: Display>(
     session_file_path: &Path,
 ) -> Result<T> {
     let input = get_input(year, day, base_input_path, session_file_path)?;
-    return P::from_str(&input)?.solve();
+    P::from_str(&input)?.solve()
 }
 
 pub fn get_input(
@@ -146,5 +146,5 @@ pub fn get_input(
 ) -> Result<String> {
     let input_path = get_input_path(base_input_path, year, day);
     download_input_if_needed(year, day, &input_path, session_file_path)?;
-    return Ok(read_to_string(&input_path)?);
+    Ok(read_to_string(&input_path)?)
 }

@@ -48,7 +48,7 @@ impl Spring {
             .into_iter()
             .rev()
             .collect();
-        return Self { spring_statuses, damaged_count, min_len_required, dp };
+        Self { spring_statuses, damaged_count, min_len_required, dp }
     }
 
     fn expand(&self, n: usize) -> Self {
@@ -65,7 +65,7 @@ impl Spring {
             .cycle()
             .take(new_damaged_count_len)
             .collect();
-        return Spring::new(spring_statuses, damaged_count);
+        Spring::new(spring_statuses, damaged_count)
     }
 }
 
@@ -126,9 +126,9 @@ impl Spring {
             .transpose()?
             .or(Some(0));
 
-        let res = computed_val.as_ref().unwrap().clone();
+        let res = *computed_val.as_ref().unwrap();
         self.dp[spring_section_idx][damaged_count_idx] = computed_val;
-        return Ok(res);
+        Ok(res)
     }
 }
 
@@ -179,11 +179,11 @@ impl FromStr for Day12Part1 {
                     .map(<u8>::from_str)
                     .map(|r| r.map_err(anyhow::Error::from))
                     .collect::<anyhow::Result<_>>()?;
-                return Ok::<_, anyhow::Error>(Spring::new(spring_statuses, damaged_count));
+                Ok::<_, anyhow::Error>(Spring::new(spring_statuses, damaged_count))
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
 
-        return Ok(Day12Part1 { springs: Mutex::new(springs) });
+        Ok(Day12Part1 { springs: Mutex::new(springs) })
     }
 }
 
@@ -205,7 +205,7 @@ impl ProblemSolver for Day12Part2 {
             .unwrap()
             .iter()
             .map(|s| s.expand(5))
-            .map(|mut s| (&mut s).combination_count(0, 0))
+            .map(|mut s| s.combination_count(0, 0))
             .sum();
     }
 }

@@ -55,7 +55,7 @@ impl FromStr for CubeSet {
                 _ => return Err(Error::FailedToParseColor(color.to_owned()))?,
             }
         }
-        return Ok(CubeSet { red, green, blue });
+        Ok(CubeSet { red, green, blue })
     }
 }
 
@@ -78,7 +78,7 @@ impl FromStr for Game {
             )
         })?;
         let bag = sets.split(';').map(str::trim).map(CubeSet::from_str).collect::<Result<_>>()?;
-        return Ok(Game { index: game_number, bag });
+        Ok(Game { index: game_number, bag })
     }
 }
 
@@ -86,7 +86,7 @@ impl FromStr for Day2 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        return Ok(Day2 { games: s.lines().map(Game::from_str).collect::<anyhow::Result<_>>()? });
+        Ok(Day2 { games: s.lines().map(Game::from_str).collect::<anyhow::Result<_>>()? })
     }
 }
 
@@ -118,7 +118,7 @@ impl TwoPartsProblemSolver for Day2 {
                         left.red = max(left.red, right.red);
                         left.green = max(left.green, right.green);
                         left.blue = max(left.blue, right.blue);
-                        return left;
+                        left
                     },
                 )
             })

@@ -10,25 +10,25 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
     fn width(&self) -> usize;
 
     fn size(&self) -> usize {
-        return self.width() * self.height();
+        self.width() * self.height()
     }
 
     fn get(&self, x: &usize, y: &usize) -> Option<&T> {
         if self.contains(x, y) {
             return Some(self.index((*x, *y)));
         }
-        return None;
+        None
     }
 
     fn contains(&self, &x: &usize, &y: &usize) -> bool {
-        return x < self.width() && y < self.height();
+        x < self.width() && y < self.height()
     }
 
     fn north_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
         if y == 0_usize || y > self.height() {
             return None;
         }
-        return Some((x, y - 1));
+        Some((x, y - 1))
     }
 
     fn south_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
@@ -36,14 +36,14 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
         if height == 0 || y >= height - 1 {
             return None;
         }
-        return Some((x, y + 1));
+        Some((x, y + 1))
     }
 
     fn west_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
         if x == 0_usize || x > self.width() {
             return None;
         }
-        return Some((x - 1, y));
+        Some((x - 1, y))
     }
 
     fn east_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
@@ -51,14 +51,14 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
         if width == 0 || x >= width - 1 {
             return None;
         }
-        return Some((x + 1, y));
+        Some((x + 1, y))
     }
 
     fn north_west_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
         if y == 0_usize || y > self.height() || x == 0_usize || x > self.width() {
             return None;
         }
-        return Some((x - 1, y - 1));
+        Some((x - 1, y - 1))
     }
 
     fn north_east_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
@@ -66,7 +66,7 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
         if y == 0_usize || y > self.height() || width == 0 || x >= width - 1 {
             return None;
         }
-        return Some((x + 1, y - 1));
+        Some((x + 1, y - 1))
     }
 
     fn south_west_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
@@ -74,7 +74,7 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
         if height == 0 || y >= height - 1 || x == 0_usize || x > self.width() {
             return None;
         }
-        return Some((x - 1, y + 1));
+        Some((x - 1, y + 1))
     }
 
     fn south_east_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
@@ -83,7 +83,7 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
         if height == 0 || y >= height - 1 || width == 0 || x >= width - 1 {
             return None;
         }
-        return Some((x + 1, y + 1));
+        Some((x + 1, y + 1))
     }
 
     fn move_from_coordinate_to_direction(

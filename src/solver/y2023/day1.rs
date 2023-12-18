@@ -20,7 +20,7 @@ impl FromStr for Day1 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        return Ok(Day1 { input: s.to_owned() });
+        Ok(Day1 { input: s.to_owned() })
     }
 }
 
@@ -46,7 +46,7 @@ impl TwoPartsProblemSolver for Day1 {
                 .transpose()?
                 .ok_or_else(|| Error::NoDigitInString(line.to_owned()))?;
         }
-        return Ok(sum);
+        Ok(sum)
     }
 
     fn solve_2(&self) -> Result<u32> {
@@ -70,12 +70,12 @@ impl TwoPartsProblemSolver for Day1 {
                     .as_str(),
             )?;
         }
-        return Ok(sum);
+        Ok(sum)
     }
 }
 
 fn str_or_rev_digit_to_u32(s: &str) -> Result<u32> {
-    return Ok(match s {
+    Ok(match s {
         "one" | "eno" => 1u32,
         "two" | "owt" => 2u32,
         "three" | "eerht" => 3u32,
@@ -86,7 +86,7 @@ fn str_or_rev_digit_to_u32(s: &str) -> Result<u32> {
         "eight" | "thgie" => 8u32,
         "nine" | "enin" => 9u32,
         val => <u32>::from_str(val)?,
-    });
+    })
 }
 
 #[cfg(test)]

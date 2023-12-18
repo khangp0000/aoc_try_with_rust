@@ -38,7 +38,7 @@ fn main() -> Result<()> {
         None => bail!(format!("There is no solver for selected year {}", args.year)),
         Some(entry) => {
             if args.days.is_empty() {
-                (*entry.1, entry.1.keys().map(|&day| day).collect::<Vec<u8>>())
+                (*entry.1, entry.1.keys().copied().collect::<Vec<u8>>())
             } else {
                 (*entry.1, args.days)
             }
@@ -60,7 +60,7 @@ fn main() -> Result<()> {
     if failed {
         bail!("At least one error occurred.");
     }
-    return Ok(());
+    Ok(())
 }
 
 #[cfg(test)]
@@ -81,26 +81,26 @@ mod tests {
         )?;
         println!("Result for year {year} day {day} is:");
         println!("{}", result);
-        return Ok(());
+        Ok(())
     }
 
     #[test]
     fn day1() -> Result<()> {
-        return run(2023, 1);
+        run(2023, 1)
     }
 
     #[test]
     fn day2() -> anyhow::Result<()> {
-        return run(2023, 2);
+        run(2023, 2)
     }
 
     #[test]
     fn day3() -> anyhow::Result<()> {
-        return run(2023, 3);
+        run(2023, 3)
     }
 
     #[test]
     fn day4() -> anyhow::Result<()> {
-        return run(2023, 4);
+        run(2023, 4)
     }
 }

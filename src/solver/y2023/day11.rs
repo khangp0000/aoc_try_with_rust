@@ -21,12 +21,11 @@ impl FromStr for Day11Part1 {
         let galaxies = s
             .lines()
             .enumerate()
-            .map(move |(y, line)| {
+            .flat_map(move |(y, line)| {
                 line.bytes()
                     .enumerate()
                     .filter_map(move |(x, b)| if b == b'#' { Some((x, y)) } else { None })
             })
-            .flatten()
             .collect::<Vec<_>>();
         let (mut non_sorted_x, sorted_y) = galaxies.iter().fold(
             (Vec::new(), Vec::new()),
@@ -35,13 +34,13 @@ impl FromStr for Day11Part1 {
                 if Some(y) != sorted_y.last() {
                     sorted_y.push(*y);
                 }
-                return (non_sorted_x, sorted_y);
+                (non_sorted_x, sorted_y)
             },
         );
 
         non_sorted_x.sort_unstable();
         non_sorted_x.dedup();
-        return Ok(Day11Part1 { galaxies, sorted_x: non_sorted_x, sorted_y });
+        Ok(Day11Part1 { galaxies, sorted_x: non_sorted_x, sorted_y })
     }
 }
 
@@ -49,7 +48,7 @@ impl ProblemSolver for Day11Part1 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        return Ok(self.find_distance_with_expand_factor(&2));
+        Ok(self.find_distance_with_expand_factor(&2))
     }
 }
 
@@ -90,14 +89,14 @@ pub fn find_galaxy_1d_distance(
         diff = expand_factor * (diff - index_diff) + (index_diff);
     }
 
-    return diff;
+    diff
 }
 
 impl ProblemSolver for Day11Part2 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        return Ok(self.find_distance_with_expand_factor(&1000000));
+        Ok(self.find_distance_with_expand_factor(&1000000))
     }
 }
 

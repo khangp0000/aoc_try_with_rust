@@ -37,11 +37,11 @@ impl TryFrom<char> for Direction {
     type Error = anyhow::Error;
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
-        return match value.to_ascii_lowercase() {
+        match value.to_ascii_lowercase() {
             'l' | 'L' => Ok(Direction::Left),
             'r' | 'R' => Ok(Direction::Right),
             _ => Err(Error::InvalidInputDirectionChar(value))?,
-        };
+        }
     }
 }
 
@@ -53,7 +53,7 @@ fn parse_map_line(s: &str) -> Result<(String, (String, String))> {
     let value_left = &s[7..10];
     let value_right = &s[12..15];
 
-    return Ok((key.to_owned(), (value_left.to_owned(), value_right.to_owned())));
+    Ok((key.to_owned(), (value_left.to_owned(), value_right.to_owned())))
 }
 
 impl FromStr for Day8Part1 {
@@ -76,7 +76,7 @@ impl FromStr for Day8Part1 {
         }
 
         let map = lines.map(parse_map_line).collect::<anyhow::Result<_>>()?;
-        return Ok(Day8Part1 { directions, map });
+        Ok(Day8Part1 { directions, map })
     }
 }
 
@@ -115,7 +115,7 @@ impl ProblemSolver for Day8Part2 {
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
         return match self.directions.iter().cycle()
             .take(MAX_MAP_COUNT)
-            .try_fold(((*self).map.keys().filter(|s| s.ends_with('A')).collect::<Vec<_>>(), 0_u32, 1_usize), |(keys, mut count, mut lcm), direction| {
+            .try_fold((self.map.keys().filter(|s| s.ends_with('A')).collect::<Vec<_>>(), 0_u32, 1_usize), |(keys, mut count, mut lcm), direction| {
                 let res = keys.iter().map(|&key| self.map.get(key).map(|(value_left, value_right)|
                     match direction {
                         Direction::Left => value_left,
@@ -124,7 +124,7 @@ impl ProblemSolver for Day8Part2 {
                 ).ok_or_else(|| anyhow!("Cannot find value for key {:?}", key)))
                     .collect::<anyhow::Result<Vec<_>>>();
 
-                return match res {
+                match res {
                     Ok(new_keys) => {
                         let len_before_filter = new_keys.len();
                         let new_keys = new_keys.into_iter().filter(|key| !key.ends_with('Z')).collect::<Vec<_>>();

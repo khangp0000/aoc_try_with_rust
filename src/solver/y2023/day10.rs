@@ -24,22 +24,22 @@ pub struct Day10Part2(Rc<Day10Part1>);
 const CARDINAL: &[GridDirection; 4] =
     &[GridDirection::North, GridDirection::South, GridDirection::East, GridDirection::West];
 
-const HORIZONTAL_PIPE: &'static Pipe =
+const HORIZONTAL_PIPE: &Pipe =
     &Pipe { entrances: enum_set!(GridDirection::West | GridDirection::East) };
 
-const VERTICAL_PIPE: &'static Pipe =
+const VERTICAL_PIPE: &Pipe =
     &Pipe { entrances: enum_set!(GridDirection::South | GridDirection::North) };
 
-const L_PIPE_NORTH_EAST: &'static Pipe =
+const L_PIPE_NORTH_EAST: &Pipe =
     &Pipe { entrances: enum_set!(GridDirection::North | GridDirection::East) };
 
-const L_PIPE_NORTH_WEST: &'static Pipe =
+const L_PIPE_NORTH_WEST: &Pipe =
     &Pipe { entrances: enum_set!(GridDirection::North | GridDirection::West) };
 
-const L_PIPE_SOUTH_WEST: &'static Pipe =
+const L_PIPE_SOUTH_WEST: &Pipe =
     &Pipe { entrances: enum_set!(GridDirection::South | GridDirection::West) };
 
-const L_PIPE_SOUTH_EAST: &'static Pipe =
+const L_PIPE_SOUTH_EAST: &Pipe =
     &Pipe { entrances: enum_set!(GridDirection::South | GridDirection::East) };
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Display, Hash)]
@@ -72,11 +72,11 @@ struct Pipe {
 
 impl Pipe {
     pub fn can_enter_from(&self, direction: GridDirection) -> Option<EnumSet<GridDirection>> {
-        return if self.entrances.contains(direction) {
+        if self.entrances.contains(direction) {
             Some(self.entrances & !direction)
         } else {
             None
-        };
+        }
     }
 }
 
@@ -97,7 +97,7 @@ impl TryFrom<u8> for PositionKind {
     type Error = anyhow::Error;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        return match value {
+        match value {
             b'.' => Ok(PositionKind::Ground),
             b'S' => Ok(PositionKind::Start),
             b'|' => Ok(PositionKind::Pipe(PipeKind::Vertical)),
@@ -107,7 +107,7 @@ impl TryFrom<u8> for PositionKind {
             b'7' => Ok(PositionKind::Pipe(PipeKind::LSouthWest)),
             b'F' => Ok(PositionKind::Pipe(PipeKind::LSouthEast)),
             _ => Err(Error::InvalidPositionChar(value))?,
-        };
+        }
     }
 }
 
@@ -142,10 +142,10 @@ impl FromStr for Day10Part1 {
             },
         ))?;
 
-        return Ok(Day10Part1 {
+        Ok(Day10Part1 {
             grid,
             start: starting_position.into_inner().context("Cannot find starting position")?,
-        });
+        })
     }
 }
 
@@ -195,7 +195,7 @@ impl Day10Part1 {
                                         ),
                                     };
 
-                                    return iter;
+                                    iter
                                 })
                             })
                     },
@@ -207,14 +207,14 @@ impl Day10Part1 {
                     |path, (coordinate, facing)| {
                         let (mut path, _) = path.as_ref().clone();
                         path.insert(*coordinate, *facing);
-                        return Rc::new((path, *facing));
+                        Rc::new((path, *facing))
                     },
                 )
             });
-        return match result {
+        match result {
             None => bail!("Cannot find a path loop back to start"),
             Some((path, _)) => Ok(path),
-        };
+        }
     }
 }
 
@@ -276,17 +276,17 @@ impl ProblemSolver for Day10Part2 {
                             };
                         }
                     }
-                    return Ok(());
+                    Ok(())
                 })?;
 
-                return Ok::<_, anyhow::Error>((counter_clock_wise, clock_wise));
+                Ok::<_, anyhow::Error>((counter_clock_wise, clock_wise))
             },
         )?;
 
         let clock_wise = clock_wise.into_inner();
-        if let Some(value) = clock_wise.map_or(None, |mut work_stack| {
+        if let Some(value) = clock_wise.and_then(|mut work_stack| {
             let mut visited = HashSet::new();
-            return if dfs_full(
+            if dfs_full(
                 &mut work_stack,
                 &mut visited,
                 |(x, y)| {
@@ -307,16 +307,16 @@ impl ProblemSolver for Day10Part2 {
                 Some(visited.len())
             } else {
                 None
-            };
+            }
         }) {
             return Ok(value);
         }
 
         let counter_clock_wise = counter_clock_wise.into_inner();
 
-        if let Some(value) = counter_clock_wise.map_or(None, |mut work_stack| {
+        if let Some(value) = counter_clock_wise.and_then(|mut work_stack| {
             let mut visited = HashSet::new();
-            return if dfs_full(
+            if dfs_full(
                 &mut work_stack,
                 &mut visited,
                 |(x, y)| {
@@ -337,7 +337,7 @@ impl ProblemSolver for Day10Part2 {
                 Some(visited.len())
             } else {
                 None
-            };
+            }
         }) {
             return Ok(value);
         }

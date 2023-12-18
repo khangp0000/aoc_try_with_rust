@@ -21,7 +21,7 @@ impl FromStr for Day6Part1 {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut lines = s.lines();
-        return Ok(Day6Part1 {
+        Ok(Day6Part1 {
             times: lines
                 .next()
                 .with_context(|| format!("Invalid input: {}", s))?
@@ -38,7 +38,7 @@ impl FromStr for Day6Part1 {
                 .map(<i32>::from_str)
                 .map(|res| res.map_err(anyhow::Error::from))
                 .collect::<Result<_>>()?,
-        });
+        })
     }
 }
 
@@ -48,7 +48,7 @@ impl FromStr for Day6Part2 {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut lines = s.lines();
 
-        return Ok(Day6Part2 {
+        Ok(Day6Part2 {
             time: lines
                 .next()
                 .with_context(|| format!("Invalid input: {}", s))?
@@ -73,7 +73,7 @@ impl FromStr for Day6Part2 {
                 .filter(|d| *d < 10)
                 .reduce(|l, r| l * 10 + r)
                 .with_context(|| format!("Invalid input: {}", s))?,
-        });
+        })
     }
 }
 
@@ -105,7 +105,7 @@ impl ProblemSolver for Day6Part2 {
                 self.time, self.distance
             )
         })?;
-        return Ok(right - left + 1);
+        Ok(right - left + 1)
     }
 }
 
@@ -129,7 +129,7 @@ fn find_time_hold_range<T: Integer>(time: T, record: T) -> Option<(T, T)> {
     } else {
         T::from_f64(right_floor)?
     };
-    return Some((left_ceil, right_floor));
+    Some((left_ceil, right_floor))
 }
 
 #[cfg(test)]

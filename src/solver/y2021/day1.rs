@@ -10,13 +10,13 @@ impl FromStr for Day1 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        return Ok(Day1 {
+        Ok(Day1 {
             report: s
                 .lines()
                 .map(<u32>::from_str)
                 .map(|r| r.map_err(anyhow::Error::from))
                 .collect::<Result<_>>()?,
-        });
+        })
     }
 }
 

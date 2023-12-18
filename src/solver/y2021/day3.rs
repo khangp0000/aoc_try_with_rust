@@ -17,7 +17,7 @@ impl FromStr for Day3 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        return Ok(Day3 {
+        Ok(Day3 {
             report: s
                 .lines()
                 .map(|line| {
@@ -30,7 +30,7 @@ impl FromStr for Day3 {
                         .collect()
                 })
                 .collect::<Result<_>>()?,
-        });
+        })
     }
 }
 
@@ -44,10 +44,10 @@ impl TwoPartsProblemSolver for Day3 {
             .iter()
             .map(|b| DynIter::new(b.iter().map(|b| if *b { 1_i32 } else { -1_i32 })))
             .reduce(|l, r| DynIter::new(l.zip(r).map(|(l_val, r_val)| l_val + r_val)))
-            .with_context(|| format!("Failed to reduce, is the list empty?"))?
+            .with_context(|| "Failed to reduce, is the list empty?".to_string())?
             .map(|val| {
                 let more_common = val > 0;
-                return (more_common, !more_common);
+                (more_common, !more_common)
             })
             .unzip::<_, _, BitVec<u32, Msb0>, BitVec<u32, Msb0>>();
 
@@ -87,22 +87,22 @@ fn get_next_set<
         .into_iter()
         .map(|(val, mut iter)| {
             let next_bit = iter.next();
-            return Ok::<(&BitVec<_, _>, _, _), anyhow::Error>((
+            Ok::<(&BitVec<_, _>, _, _), anyhow::Error>((
                 val,
                 iter,
                 next_bit
                     .context("Failed to get next bit")
                     .map(|b| if *b { 1_i32 } else { -1_i32 })?,
-            ));
+            ))
         })
         .try_fold((Vec::new(), 0), |(mut vec, mut acc), r| {
             let (val, iter, one_value) = r?;
             vec.push((val, one_value, iter));
             acc += one_value;
-            return Ok::<_, anyhow::Error>((vec, acc));
+            Ok::<_, anyhow::Error>((vec, acc))
         })?;
     let more_one_than_zero = compare_value >= 0;
-    return if more_one_than_zero {
+    if more_one_than_zero {
         Ok(next_set
             .into_iter()
             .filter(|(_, one_val, _)| if_more_one_than_zero_keep_zero ^ (one_val > &0))
@@ -114,7 +114,7 @@ fn get_next_set<
             .filter(|(_, one_val, _)| if_more_one_than_zero_keep_zero ^ (one_val < &0))
             .map(|(val, _, iter)| (val, iter))
             .collect())
-    };
+    }
 }
 
 #[cfg(all(test))]

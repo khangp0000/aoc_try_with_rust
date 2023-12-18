@@ -22,17 +22,17 @@ impl<T> Index<(usize, usize)> for Grid2dVec<T> {
     type Output = T;
 
     fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
-        return &self.grid[y][x];
+        &self.grid[y][x]
     }
 }
 
 impl<T> Grid2d<T> for Grid2dVec<T> {
     fn height(&self) -> usize {
-        return self.height;
+        self.height
     }
 
     fn width(&self) -> usize {
-        return self.width;
+        self.width
     }
 }
 
@@ -58,7 +58,7 @@ impl<T> Grid2dVec<T> {
 
         let height = grid.len();
         let &width = predict_width.get_or_init(|| 0_usize);
-        return Ok(Self { grid, height, width });
+        Ok(Self { grid, height, width })
     }
 
     pub fn map_out_place<F: FnMut(usize, usize, &T) -> G, G>(&self, mut map_fn: F) -> Grid2dVec<G> {

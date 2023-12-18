@@ -21,12 +21,12 @@ impl FromStr for Movement {
             .split_once(' ')
             .with_context(|| format!("Failed to split whitespace for string: {}", s))?;
         let value = <i32>::from_str(value)?;
-        return Ok(match movement {
+        Ok(match movement {
             "forward" => Forward(value),
             "down" => Down(value),
             "up" => Up(value),
             _ => bail!(format!("Unknown movement: {}", movement)),
-        });
+        })
     }
 }
 
@@ -51,7 +51,7 @@ impl TwoPartsProblemSolver for Day2 {
             Up(val) => (x, y - val),
         });
 
-        return Ok(x * y);
+        Ok(x * y)
     }
 
     fn solve_2(&self) -> Result<i32> {
@@ -60,7 +60,7 @@ impl TwoPartsProblemSolver for Day2 {
             Down(val) => (x, y, aim + val),
             Up(val) => (x, y, aim - val),
         });
-        return Ok(x * y);
+        Ok(x * y)
     }
 }
 

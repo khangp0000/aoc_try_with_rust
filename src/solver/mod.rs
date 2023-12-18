@@ -45,7 +45,7 @@ where
 {
     type SolutionType = Result2Parts<T1, T2>;
     fn solve(&self) -> Result<Result2Parts<T1, T2>> {
-        return Ok(Result2Parts::new(self.solve_1()?, self.solve_2()?));
+        Ok(Result2Parts::new(self.solve_1()?, self.solve_2()?))
     }
 }
 

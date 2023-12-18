@@ -12,7 +12,7 @@ impl FromStr for Day4 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        return Ok(Day4 {
+        Ok(Day4 {
             cards: s
                 .lines()
                 .map(|s| s.split_once(':').unwrap().1)
@@ -24,7 +24,7 @@ impl FromStr for Day4 {
                     ))
                 })
                 .collect::<Result<_>>()?,
-        });
+        })
     }
 }
 

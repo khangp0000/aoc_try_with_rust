@@ -43,7 +43,7 @@ impl FromStr for CardHand {
             .try_fold((0_u32, vec![0_u8; 13]), |(value, mut counts), digit| {
                 let digit = digit?;
                 counts[digit as usize] += 1_u8;
-                return Ok::<_, anyhow::Error>((value * 13_u32 + digit, counts));
+                Ok::<_, anyhow::Error>((value * 13_u32 + digit, counts))
             })?;
         let mut count_max_heap: BinaryHeap<_> = count
             .into_iter()
@@ -52,7 +52,7 @@ impl FromStr for CardHand {
             .map(|(index, count)| (count, index))
             .collect();
 
-        return Ok(match count_max_heap.pop().unwrap() {
+        Ok(match count_max_heap.pop().unwrap() {
             (5, _) => CardHand::FiveOfAKind(value),
             (4, _) => CardHand::FourOfAKind(value),
             (3, _) => match count_max_heap.pop().unwrap() {
@@ -67,7 +67,7 @@ impl FromStr for CardHand {
             },
             (1, _) => CardHand::HighCard(value),
             _ => unreachable!(),
-        });
+        })
     }
 }
 
@@ -95,7 +95,7 @@ impl FromStr for CardHandWithJoker {
             .try_fold((0_u32, vec![0_u8; 13]), |(value, mut counts), digit| {
                 let digit = digit?;
                 counts[digit as usize] += 1_u8;
-                return Ok::<_, anyhow::Error>((value * 13_u32 + digit, counts));
+                Ok::<_, anyhow::Error>((value * 13_u32 + digit, counts))
             })?;
         let joker_count = count[0];
         if joker_count == 5_u8 {
@@ -109,7 +109,7 @@ impl FromStr for CardHandWithJoker {
             .map(|(index, count)| (count, index))
             .collect();
 
-        return Ok(CardHandWithJoker(match count_max_heap.pop().unwrap() {
+        Ok(CardHandWithJoker(match count_max_heap.pop().unwrap() {
             (5, _) => CardHand::FiveOfAKind(value),
             (4, _) => match joker_count {
                 0 => CardHand::FourOfAKind(value),
@@ -150,7 +150,7 @@ impl FromStr for CardHandWithJoker {
                 _ => unreachable!(),
             },
             _ => unreachable!(),
-        }));
+        }))
     }
 }
 
@@ -173,7 +173,7 @@ impl FromStr for Day7Part1 {
             })
             .collect::<anyhow::Result<_>>()?;
         cards.sort_unstable();
-        return Ok(Day7Part1(cards));
+        Ok(Day7Part1(cards))
     }
 }
 
@@ -204,7 +204,7 @@ impl FromStr for Day7Part2 {
             })
             .collect::<anyhow::Result<_>>()?;
         cards.sort_unstable();
-        return Ok(Day7Part2(cards));
+        Ok(Day7Part2(cards))
     }
 }
 
@@ -217,11 +217,11 @@ impl ProblemSolver for Day7Part2 {
 }
 
 fn get_hands_rank<'a, H: 'a, I: IntoIterator<Item = &'a (H, u32)>>(hands: I) -> u32 {
-    return hands
+    hands
         .into_iter()
         .enumerate()
         .map(|(index, (_, bid))| (index as u32 + 1) * bid)
-        .sum::<u32>();
+        .sum::<u32>()
 }
 
 #[cfg(test)]

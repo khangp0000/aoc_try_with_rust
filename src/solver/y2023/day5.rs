@@ -65,10 +65,10 @@ impl<T: Integer> FromStr for Day5<T> {
                     })
                     .collect::<Result<Result<Vec<_>>>>()??;
                 map_data.sort_unstable();
-                return Ok::<_, anyhow::Error>((map_name.to_owned(), map_data));
+                Ok::<_, anyhow::Error>((map_name.to_owned(), map_data))
             })
             .collect::<Result<_>>()?;
-        return Ok(Day5 { seeds, data });
+        Ok(Day5 { seeds, data })
     }
 }
 
@@ -84,7 +84,7 @@ where
         for (_, map) in &self.data {
             seeds = Box::new(seeds.map(move |s| get_from_range_to_range_maps(map, &s)))
         }
-        return seeds.try_fold(T::max_value(), |a, b| Ok(min(a, b)));
+        seeds.try_fold(T::max_value(), |a, b| Ok(min(a, b)))
     }
 
     fn solve_2(&self) -> Result<T> {
@@ -122,7 +122,7 @@ fn get_from_range_to_range_maps<
             return value;
         }
     }
-    return *source;
+    *source
 }
 
 fn try_get_from_one_range_map<T: Integer>(
@@ -133,7 +133,7 @@ fn try_get_from_one_range_map<T: Integer>(
     if source_map.contains(source) {
         return Some(dest_map.start + (*source - source_map.start));
     }
-    return None;
+    None
 }
 
 fn get_range_from_range_to_range_maps<'a, T, MI>(
@@ -152,12 +152,12 @@ where
             let (mut res, remainder) =
                 get_range_from_one_range_to_range_map(source_ref, &source_range, &dest_range);
             final_res.append(&mut res);
-            return (final_res, Cow::from(remainder));
+            (final_res, Cow::from(remainder))
         },
     );
 
-    final_res.append(&mut remainder.to_mut());
-    return final_res;
+    final_res.append(remainder.to_mut());
+    final_res
 }
 
 fn get_range_from_one_range_to_range_map<'a, T, V>(
@@ -169,7 +169,7 @@ where
     T: Integer,
     V: IntoIterator<Item = &'a IntRange<T>>,
 {
-    return sources
+    sources
         .into_iter()
         .map(|source| (source.intersect(source_range), source.sub(source_range)))
         .fold(
@@ -181,9 +181,9 @@ where
                     res.push(intersection);
                 }
                 remainder.append(&mut sub_result);
-                return (res, remainder);
+                (res, remainder)
             },
-        );
+        )
 }
 
 #[cfg(test)]

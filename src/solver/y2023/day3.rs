@@ -23,22 +23,20 @@ impl TwoPartsProblemSolver for Day3 {
     type Solution2Type = u64;
 
     fn solve_1(&self) -> Result<u64> {
-        return (0..self.board.len()).map(|i| self.process_line_1(i)).sum();
+        (0..self.board.len()).map(|i| self.process_line_1(i)).sum()
     }
 
     fn solve_2(&self) -> Result<u64> {
         let mut container = HashMap::new();
 
-        (0..self.board.len())
-            .map(|i| self.process_line_2(&mut container, i))
-            .collect::<Result<()>>()?;
+        (0..self.board.len()).try_for_each(|i| self.process_line_2(&mut container, i))?;
 
         let sum_prod: u64 = container
             .iter()
             .filter(|(_, vals)| vals.len() == 2)
             .map(|(_, vals)| vals.iter().product::<u64>())
             .sum();
-        return Ok(sum_prod);
+        Ok(sum_prod)
     }
 }
 
@@ -54,15 +52,15 @@ impl Day3 {
                 let left = curr_idx + first_digit_idx_from_curr_idx;
                 let right;
                 if let Some(int_len_minus_1) =
-                    (&line[(left + 1)..]).iter().position(|c| !c.is_ascii_digit())
+                    line[(left + 1)..].iter().position(|c| !c.is_ascii_digit())
                 {
                     right = left + int_len_minus_1 + 1;
                 } else {
                     right = line.len();
                 }
 
-                if (left > 0 && (&line[left - 1..left]).iter().any(is_symbol))
-                    || (right < line.len() && (&line[right..right + 1]).iter().any(is_symbol))
+                if (left > 0 && line[left - 1..left].iter().any(is_symbol))
+                    || (right < line.len() && line[right..right + 1].iter().any(is_symbol))
                     || (idx > 0
                         && (self.board[idx - 1][(match left {
                             0 => 0,
@@ -88,7 +86,7 @@ impl Day3 {
                 curr_idx = line.len();
             }
         }
-        return Ok(sum);
+        Ok(sum)
     }
 
     fn process_line_2(
@@ -105,7 +103,7 @@ impl Day3 {
                 let left = curr_idx + first_digit_idx_from_curr_idx;
                 let right;
                 if let Some(int_len_minus_1) =
-                    (&line[(left + 1)..]).iter().position(|c| !c.is_ascii_digit())
+                    line[(left + 1)..].iter().position(|c| !c.is_ascii_digit())
                 {
                     right = left + int_len_minus_1 + 1;
                 } else {
@@ -129,7 +127,7 @@ impl Day3 {
                         .for_each(|index| {
                             container
                                 .entry((index, idx - 1))
-                                .or_insert(Vec::new())
+                                .or_default()
                                 .push(*value.get_or_init(value_init_f))
                         });
                 }
@@ -146,7 +144,7 @@ impl Day3 {
                         .for_each(|index| {
                             container
                                 .entry((index, idx + 1))
-                                .or_insert(Vec::new())
+                                .or_default()
                                 .push(*value.get_or_init(value_init_f))
                         });
                 }
@@ -154,14 +152,14 @@ impl Day3 {
                 if left > 0 && line[left - 1] == b'*' {
                     container
                         .entry((left - 1, idx))
-                        .or_insert(Vec::new())
+                        .or_default()
                         .push(*value.get_or_init(value_init_f));
                 }
 
                 if right < line.len() && line[right] == b'*' {
                     container
                         .entry((right, idx))
-                        .or_insert(Vec::new())
+                        .or_default()
                         .push(*value.get_or_init(value_init_f));
                 }
 
@@ -170,12 +168,12 @@ impl Day3 {
                 curr_idx = line.len();
             }
         }
-        return Ok(());
+        Ok(())
     }
 }
 
 fn is_symbol(c: &u8) -> bool {
-    return !c.is_ascii_digit() && *c != b'.';
+    !c.is_ascii_digit() && *c != b'.'
 }
 
 fn parse_u64_str_from_bytes(input: &[u8]) -> anyhow::Result<u64> {
@@ -188,7 +186,7 @@ fn parse_u64_str_from_bytes(input: &[u8]) -> anyhow::Result<u64> {
         res *= 10;
         res += curr_val;
     }
-    return Ok(res);
+    Ok(res)
 }
 
 #[cfg(test)]

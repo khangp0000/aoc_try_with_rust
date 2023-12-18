@@ -50,5 +50,5 @@ where
         }
     }
 
-    return None;
+    None
 }

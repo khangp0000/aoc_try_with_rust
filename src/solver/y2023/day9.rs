@@ -16,7 +16,7 @@ impl FromStr for Day9Part1 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        return Ok(Day9Part1(
+        Ok(Day9Part1(
             s.lines()
                 .map(|line| {
                     line.split_whitespace()
@@ -25,7 +25,7 @@ impl FromStr for Day9Part1 {
                         .collect::<anyhow::Result<Vec<_>>>()
                 })
                 .collect::<anyhow::Result<Vec<_>>>()?,
-        ));
+        ))
     }
 }
 
@@ -51,7 +51,7 @@ fn predict_next_val(input: &Vec<i32>) -> anyhow::Result<i32> {
         bail!("Cannot reduce following sequence to 0s: {:?}", input);
     }
 
-    return Ok(sum);
+    Ok(sum)
 }
 
 impl ProblemSolver for Day9Part2 {
@@ -85,7 +85,7 @@ fn predict_prev_val(input: &Vec<i32>) -> anyhow::Result<i32> {
         bail!("Cannot reduce following sequence to 0s: {:?}", input);
     }
 
-    return Ok(acc);
+    Ok(acc)
 }
 
 #[cfg(test)]
