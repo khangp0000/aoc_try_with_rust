@@ -28,4 +28,4 @@ strip = "symbols"
 lto = true
 
 [profile.test]
-opt-level = 3
+#opt-level = 3
