@@ -2,9 +2,9 @@ use crate::solver::TwoPartsProblemSolver;
 use crate::utils::int_range::IntRange;
 use crate::utils::int_trait::Integer;
 use anyhow::Result;
-use anyhow::{anyhow, bail, Context};
+use anyhow::{bail, Context};
 use regex::Regex;
-use sscanf::sscanf;
+
 use std::borrow::Cow;
 use std::cmp::min;
 use std::str::FromStr;
@@ -23,9 +23,11 @@ impl<T: Integer> FromStr for Day5<T> {
         let seed_line =
             parts.next().with_context(|| format!("No seed line found from input: {:?}", s))?;
 
-        let seeds = sscanf!(seed_line, "seeds: {str}").map_err(|e| {
-            anyhow!("Cannot parse seed line for input: {:?}\nDescription: {}", seed_line, e)
-        })?;
+        if !seed_line.starts_with("seeds: ") {
+            bail!(format!("Cannot parse seed line for input: {:?}", seed_line))
+        }
+
+        let seeds = &seed_line[7..];
         let seeds = seeds.split_whitespace().map(<T>::from_str).collect::<Result<_, T::Err>>()?;
 
         let data: Vec<(String, Vec<(IntRange<T>, IntRange<T>)>)> = parts
@@ -34,9 +36,12 @@ impl<T: Integer> FromStr for Day5<T> {
                 let map_line = lines
                     .next()
                     .with_context(|| format!("No map line found from input: {:?}", data_part))?;
-                let map_name = sscanf!(map_line, "{str} map:").map_err(|e| {
-                    anyhow!("Cannot parse map line for input: {:?}\nDescription: {}", map_line, e)
-                })?;
+
+                if !map_line.ends_with(" map:") {
+                    bail!(format!("Cannot parse map line for input: {:?}", map_line))
+                }
+
+                let map_name = &map_line[..map_line.len() - 5];
                 let mut map_data = lines
                     .map(|line| {
                         line.split_whitespace().map(<T>::from_str).try_fold(

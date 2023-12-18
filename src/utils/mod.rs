@@ -6,7 +6,7 @@ pub mod int_trait;
 use anyhow::Result;
 
 use crate::solver::ProblemSolver;
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use reqwest::blocking::Client;
 
 use derive_more::Deref;
@@ -34,40 +34,10 @@ macro_rules! boxed_try_get_input_and_solve {
 
 pub(crate) use boxed_try_get_input_and_solve;
 
-pub trait FromSScanfError {
-    fn from_sscanf_err(err: &sscanf::Error, string_to_scan: String, pattern: &'static str) -> Self;
-}
-
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Failed to split with delimiter {1:?}: {0:?}")]
     FailedToSplit(String, char),
-    #[error("Failed to sscanf {string_to_scan:?} with pattern {pattern:?} caused by {source:?}")]
-    FailedToSScanf {
-        string_to_scan: String,
-        pattern: &'static str,
-        #[source]
-        source: Option<anyhow::Error>,
-    },
-}
-
-impl FromSScanfError for Error {
-    fn from_sscanf_err(
-        err: &sscanf::Error,
-        string_to_scan: String,
-        pattern: &'static str,
-    ) -> Error {
-        return match err {
-            sscanf::Error::MatchFailed => {
-                Error::FailedToSScanf { string_to_scan, pattern, source: None }
-            }
-            sscanf::Error::ParsingFailed(inner_error) => Error::FailedToSScanf {
-                string_to_scan,
-                pattern,
-                source: Some(anyhow!(inner_error.to_string())),
-            },
-        };
-    }
 }
 
 #[derive(Debug, Eq, PartialEq, new)]

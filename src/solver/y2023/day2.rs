@@ -1,7 +1,7 @@
 use crate::solver::TwoPartsProblemSolver;
-use crate::utils::FromSScanfError;
-use anyhow::Result;
-use sscanf::sscanf;
+
+use anyhow::{Context, Result};
+
 use std::cmp::max;
 use std::str::FromStr;
 use thiserror::Error;
@@ -36,8 +36,11 @@ impl FromStr for CubeSet {
         let mut blue = 0_u32;
         for step in s.split(',') {
             let step = step.trim();
-            let (count, color) = sscanf!(step, "{u32} {str}").map_err(|e| {
-                crate::utils::Error::from_sscanf_err(&e, step.to_owned(), "{u32} {str}")
+            let (count, color) = step
+                .split_once(' ')
+                .with_context(|| format!("Expected \"[count] [color]\" but got {:?}", step))?;
+            let count = u32::from_str(count).with_context(|| {
+                format!("Expected \"[count] [color]\" but cannot parse number [count]: {:?}", step)
             })?;
             match color {
                 "red" => {
@@ -65,8 +68,14 @@ impl FromStr for Game {
             .ok_or_else(|| crate::utils::Error::FailedToSplit(s.to_owned(), ':'))?;
         let game_number = game_number.trim();
         let sets = sets.trim();
-        let game_number = sscanf!(game_number, "Game {u32}").map_err(|e| {
-            crate::utils::Error::from_sscanf_err(&e, game_number.to_owned(), "Game {u32}")
+        let (_, game_number) = game_number.split_once(' ').with_context(|| {
+            format!("Expected \"Game [game_number]\" but got {:?}", game_number)
+        })?;
+        let game_number = <u32>::from_str(game_number).with_context(|| {
+            format!(
+                "Expected \"Game [game_number]\" but cannot parse [game_number]: {:?}",
+                game_number
+            )
         })?;
         let bag = sets.split(';').map(str::trim).map(CubeSet::from_str).collect::<Result<_>>()?;
         return Ok(Game { index: game_number, bag });

@@ -1,5 +1,5 @@
 use crate::solver::{share_struct_solver, ProblemSolver};
-use crate::utils::{FromSScanfError, WarningResult};
+use crate::utils::WarningResult;
 use anyhow::Result;
 use anyhow::{anyhow, bail};
 use derive_more::{Deref, Display, FromStr};
@@ -46,14 +46,13 @@ impl TryFrom<char> for Direction {
 }
 
 fn parse_map_line(s: &str) -> Result<(String, (String, String))> {
-    let (key, value_left, value_right) =
-        sscanf::sscanf!(s, "{str:/.../} = ({str:/.../}, {str:/.../})").map_err(|e| {
-            crate::utils::Error::from_sscanf_err(
-                &e,
-                s.to_owned(),
-                "{str:/.../} = ({str:/.../}, {str:/.../})",
-            )
-        })?;
+    if &s[3..7] != " = (" || &s[10..12] != ", " || &s[15..16] != ")" {
+        bail!(format!("Expected \"... = (..., ...)\" but got {:?}", s));
+    }
+    let key = &s[0..3];
+    let value_left = &s[7..10];
+    let value_right = &s[12..15];
+
     return Ok((key.to_owned(), (value_left.to_owned(), value_right.to_owned())));
 }
 
