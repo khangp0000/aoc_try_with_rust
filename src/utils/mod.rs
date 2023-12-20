@@ -2,15 +2,12 @@ pub mod graph;
 pub mod grid;
 pub mod int_range;
 pub mod int_trait;
-
-use anyhow::Result;
-
 use crate::solver::ProblemSolver;
 use anyhow::Context;
-use reqwest::blocking::Client;
-
+use anyhow::Result;
 use derive_more::{Deref, Display};
 use derive_new::new;
+use reqwest::blocking::Client;
 use std::fmt::Formatter;
 use std::fs;
 use std::fs::{create_dir_all, read_to_string, File};

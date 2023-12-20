@@ -117,7 +117,7 @@ fn get_next_set<
     }
 }
 
-#[cfg(all(test))]
+#[cfg(test)]
 mod tests {
     use crate::solver::y2021::day3::Day3;
     use crate::solver::TwoPartsProblemSolver;

@@ -1,7 +1,5 @@
 use crate::solver::TwoPartsProblemSolver;
-
 use anyhow::{Context, Result};
-
 use std::cmp::max;
 use std::str::FromStr;
 use thiserror::Error;
@@ -127,7 +125,7 @@ impl TwoPartsProblemSolver for Day2 {
     }
 }
 
-#[cfg(all(test))]
+#[cfg(test)]
 mod tests {
     use crate::solver::y2023::day2::Day2;
     use crate::solver::TwoPartsProblemSolver;

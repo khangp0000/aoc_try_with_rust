@@ -2,9 +2,7 @@ use std::collections::HashSet;
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use std::rc::Rc;
-
-pub fn dfs<'a, S, N, E, I, A, AF>(
+pub fn dfs<S, N, E, I, A, AF>(
     start: S,
     neighbor_fn: N,
     end_state_fn: E,

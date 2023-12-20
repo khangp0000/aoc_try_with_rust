@@ -70,7 +70,7 @@ pub fn find_galaxy_1d_distance(
     d_1: &usize,
     d_2: &usize,
     expand_factor: &usize,
-    sorted_dedup_d_with_galaxies: &Vec<usize>,
+    sorted_dedup_d_with_galaxies: &[usize],
 ) -> usize {
     let lo;
     let hi;

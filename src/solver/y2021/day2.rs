@@ -64,7 +64,7 @@ impl TwoPartsProblemSolver for Day2 {
     }
 }
 
-#[cfg(all(test))]
+#[cfg(test)]
 mod tests {
     use crate::solver::y2021::day2::Day2;
     use crate::solver::TwoPartsProblemSolver;

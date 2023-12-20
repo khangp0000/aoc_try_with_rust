@@ -1,17 +1,15 @@
 use crate::solver::{share_struct_solver, ProblemSolver};
-use crate::utils::graph::{dfs, dfs_full};
+use crate::utils::graph::dfs;
 use crate::utils::grid::grid_2d_vec::Grid2dVec;
 use crate::utils::grid::{Grid2d, GridDirection};
 use anyhow::{anyhow, bail, Context};
 use derive_more::{Deref, DerefMut, Display, FromStr};
 use enumset::{enum_set, EnumSet};
-use itertools::Itertools;
 use std::cell::OnceCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 use std::sync::{Arc, OnceLock};
-use num::Integer;
 use thiserror::Error;
 
 share_struct_solver!(Day10, Day10Part1, Day10Part2);
@@ -39,53 +37,6 @@ const L_PIPE_NORTH_WEST: &Pipe = &Pipe::new(enum_set!(GridDirection::North | Gri
 const L_PIPE_SOUTH_WEST: &Pipe = &Pipe::new(enum_set!(GridDirection::South | GridDirection::West));
 
 const L_PIPE_SOUTH_EAST: &Pipe = &Pipe::new(enum_set!(GridDirection::South | GridDirection::East));
-
-static CLOCK_WISE_COUNTER_CLOCKWISE: OnceLock<
-    HashMap<(GridDirection, GridDirection), (EnumSet<GridDirection>, EnumSet<GridDirection>)>,
-> = OnceLock::new();
-
-fn create_clockwise_counter_clockwise_map()
--> HashMap<(GridDirection, GridDirection), (EnumSet<GridDirection>, EnumSet<GridDirection>)> {
-    let mut res = HashMap::new();
-    res.insert(
-        (GridDirection::West, GridDirection::East),
-        (GridDirection::South.into(), GridDirection::North.into()),
-    );
-    res.insert(
-        (GridDirection::South, GridDirection::North),
-        (GridDirection::East.into(), GridDirection::West.into()),
-    );
-    res.insert(
-        (GridDirection::North, GridDirection::East),
-        (GridDirection::South | GridDirection::West, EnumSet::empty()),
-    );
-    res.insert(
-        (GridDirection::North, GridDirection::West),
-        (EnumSet::empty(), GridDirection::South | GridDirection::East),
-    );
-    res.insert(
-        (GridDirection::South, GridDirection::East),
-        (EnumSet::empty(), GridDirection::North | GridDirection::West),
-    );
-    res.insert(
-        (GridDirection::South, GridDirection::West),
-        (GridDirection::North | GridDirection::East, EnumSet::empty()),
-    );
-
-    let reverse = res
-        .iter()
-        .map(|((entry, exit), (clockwise, counter_clockwise))| {
-            ((exit.clone(), entry.clone()), (counter_clockwise.clone(), clockwise.clone()))
-        })
-        .collect_vec();
-    reverse.into_iter().for_each(|(k, v)| {
-        if res.insert(k, v).is_some() {
-            unreachable!()
-        };
-    });
-
-    res
-}
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Display, Hash)]
 enum PipeKind {
@@ -201,30 +152,32 @@ impl ProblemSolver for Day10Part1 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        let res = self.pipe_path.get_or_init(|| self.find_pipe_loop().map_err(|e| Arc::new(e)));
-        return res.clone().map(|path| path.len() / 2).map_err(|e| anyhow!(e));
+        let res = self.pipe_path.get_or_init(|| self.find_pipe_loop().map_err(Arc::new));
+        res.clone().map(|path| path.len() / 2).map_err(|e| anyhow!(e))
     }
 }
 
-#[derive(Eq, PartialEq, Clone, Debug)]
+#[derive(Clone, Debug)]
 struct ChainPath {
     prev: Option<ChainPathRc>,
     position_and_facing: ((usize, usize), GridDirection),
     enter_direction: Option<GridDirection>,
+    start: Weak<ChainPath>,
     len: usize,
 }
 
-#[derive(Deref, DerefMut, Eq, PartialEq, Clone, Debug, Display)]
+#[derive(Deref, DerefMut, Clone, Debug, Display)]
 struct ChainPathRc(Rc<ChainPath>);
 
 impl ChainPathRc {
     fn start(position_and_facing: ((usize, usize), GridDirection)) -> ChainPathRc {
-        return ChainPathRc(Rc::new(ChainPath {
+        ChainPathRc(Rc::new_cyclic(|me| ChainPath {
             prev: None,
             position_and_facing,
             enter_direction: None,
+            start: me.clone(),
             len: 1,
-        }));
+        }))
     }
 }
 
@@ -246,16 +199,17 @@ impl Display for ChainPath {
 
 impl ChainPathTrait for ChainPathRc {
     fn push(&self, position_and_facing: ((usize, usize), GridDirection)) -> ChainPathRc {
-        return ChainPathRc(Rc::new(ChainPath {
+        ChainPathRc(Rc::new(ChainPath {
             prev: Some(self.clone()),
             position_and_facing,
             enter_direction: Some(self.position_and_facing.1.reverse()),
+            start: self.start.clone(),
             len: self.len + 1,
-        }));
+        }))
     }
 
     fn len(&self) -> usize {
-        return self.len;
+        self.len
     }
 }
 
@@ -264,7 +218,7 @@ impl IntoIterator for ChainPathRc {
     type IntoIter = ChainPathIter;
 
     fn into_iter(self) -> Self::IntoIter {
-        return ChainPathIter { current: Some(self) };
+        ChainPathIter { current: Some(self) }
     }
 }
 
@@ -279,10 +233,10 @@ impl Iterator for ChainPathIter {
         match &self.current {
             None => None,
             Some(chain) => {
-                let (pos, exit) = chain.position_and_facing.clone();
-                let enter = chain.enter_direction.clone();
+                let (pos, exit) = chain.position_and_facing;
+                let enter = chain.enter_direction;
                 self.current = chain.prev.clone();
-                return Some((pos, (enter, exit)));
+                Some((pos, (enter, exit)))
             }
         }
     }
@@ -335,8 +289,8 @@ impl Day10Part1 {
                     None,
                     |path, next_coordinate_and_facing| {
                         Some(path.as_ref().map_or_else(
-                            || ChainPathRc::start(next_coordinate_and_facing.clone()),
-                            |path: &ChainPathRc| path.push(next_coordinate_and_facing.clone()),
+                            || ChainPathRc::start(*next_coordinate_and_facing),
+                            |path: &ChainPathRc| path.push(*next_coordinate_and_facing),
                         ))
                     },
                 )
@@ -354,101 +308,76 @@ impl ProblemSolver for Day10Part2 {
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
         let chain_path = self
             .pipe_path
-            .get_or_init(|| self.find_pipe_loop().map_err(|e| Arc::new(e)))
+            .get_or_init(|| self.find_pipe_loop().map_err(Arc::new))
             .clone()
             .map_err(|e| anyhow!(e))?;
 
         let start_enter = chain_path.position_and_facing.1.reverse();
+        let start_exit = chain_path.start.clone().upgrade().unwrap().position_and_facing.1;
+        let start_pipe = match (start_enter, start_exit) {
+            (GridDirection::North, GridDirection::South) => PipeKind::Vertical,
+            (GridDirection::North, GridDirection::East) => PipeKind::LNorthEast,
+            (GridDirection::North, GridDirection::West) => PipeKind::LNorthWest,
+            (GridDirection::South, GridDirection::North) => PipeKind::Vertical,
+            (GridDirection::South, GridDirection::West) => PipeKind::LSouthWest,
+            (GridDirection::South, GridDirection::East) => PipeKind::LSouthEast,
+            (GridDirection::East, GridDirection::North) => PipeKind::LNorthEast,
+            (GridDirection::East, GridDirection::West) => PipeKind::Horizontal,
+            (GridDirection::East, GridDirection::South) => PipeKind::LSouthEast,
+            (GridDirection::West, GridDirection::North) => PipeKind::LNorthWest,
+            (GridDirection::West, GridDirection::East) => PipeKind::Horizontal,
+            (GridDirection::West, GridDirection::South) => PipeKind::LSouthWest,
+            (_, _) => unreachable!(),
+        };
         let path_hash_map: HashMap<_, _> = chain_path
             .into_iter()
             .map(|(pos, (enter, exit))| (pos, (enter.unwrap_or(start_enter), exit)))
             .collect();
 
         let grid = &self.grid.map_out_place(|x, y, t| {
-            if path_hash_map.contains_key(&(x, y)) { *t } else { PositionKind::Ground }
+            if path_hash_map.contains_key(&(x, y)) {
+                if PositionKind::Start == *t { PositionKind::Pipe(start_pipe) } else { *t }
+            } else {
+                PositionKind::Ground
+            }
         });
 
-        let (clockwise, counter_clockwise) = path_hash_map.into_iter().fold(
-            (Some(Vec::new()), Some(Vec::new())),
-            |(cw_vec, ccw_vec), ((x, y), enter_exit_flow)| {
-                let (curr_cw, curr_ccw) = CLOCK_WISE_COUNTER_CLOCKWISE
-                    .get_or_init(|| create_clockwise_counter_clockwise_map())
-                    .get(&enter_exit_flow)
-                    .unwrap();
-                let cw_vec = cw_vec.and_then(|cw_vec| {
-                    curr_cw
-                        .iter()
-                        .map(|dir| grid.move_from_coordinate_to_direction(&x, &y, &dir))
-                        .try_fold(cw_vec, |mut cw_vec, pos| {
-                            pos.map(|pos| {
-                                if grid[pos] == PositionKind::Ground {
-                                    cw_vec.push(pos);
+        Ok(grid
+            .rows()
+            .map(|row| {
+                row.iter().fold(
+                    (false, false, 0_usize),
+                    |(mut is_inside, mut is_from_south, mut count_inside), position_kind| {
+                        match position_kind {
+                            PositionKind::Start => unreachable!(),
+                            PositionKind::Ground => {
+                                if is_inside {
+                                    count_inside += 1;
                                 }
-                                cw_vec
-                            })
-                        })
-                });
-
-                let ccw_vec = ccw_vec.and_then(|ccw_vec| {
-                    curr_ccw
-                        .iter()
-                        .map(|dir| grid.move_from_coordinate_to_direction(&x, &y, &dir))
-                        .try_fold(ccw_vec, |mut ccw_vec, pos| {
-                            pos.map(|pos| {
-                                if grid[pos] == PositionKind::Ground {
-                                    ccw_vec.push(pos);
+                            }
+                            PositionKind::Pipe(pipe_kind) => match pipe_kind {
+                                PipeKind::Horizontal => {}
+                                PipeKind::LNorthEast => is_from_south = false,
+                                PipeKind::LSouthEast => is_from_south = true,
+                                PipeKind::LNorthWest => {
+                                    if is_from_south {
+                                        is_inside = !is_inside
+                                    }
                                 }
-                                ccw_vec
-                            })
-                        })
-                });
-
-                (cw_vec, ccw_vec)
-            },
-        );
-
-        if let Some(value) =
-            clockwise.and_then(|starting_pos| flooding_count_wall_return_none(grid, starting_pos))
-        {
-            return Ok(value);
-        }
-
-        if let Some(value) = counter_clockwise
-            .and_then(|starting_pos| flooding_count_wall_return_none(grid, starting_pos))
-        {
-            return Ok(value);
-        }
-        bail!("Somehow both side can reach the edge ¯\\_(ツ)_/¯")
-    }
-}
-
-fn flooding_count_wall_return_none(
-    grid: &Grid2dVec<PositionKind>,
-    starting_pos: Vec<(usize, usize)>,
-) -> Option<usize> {
-    let mut work_stack = starting_pos.into_iter().map(|pos| ((), pos)).collect_vec();
-    let mut visited = HashSet::new();
-    if dfs_full(
-        &mut work_stack,
-        &mut visited,
-        |(x, y)| {
-            let x = *x;
-            let y = *y;
-            CARDINAL
-                .iter()
-                .filter_map(move |direction| {
-                    grid.move_from_coordinate_to_direction(&x, &y, direction)
-                })
-                .filter(|(x, y)| grid[(*x, *y)] == PositionKind::Ground)
-        },
-        |_, (x, y)| *x == 0 || *y == 0 || *x == grid.width() - 1 || *y == grid.width() - 1,
-        |acc, _| acc.clone(),
-    )
-    .is_none()
-    {
-        Some(visited.len())
-    } else {
-        None
+                                PipeKind::LSouthWest => {
+                                    if !is_from_south {
+                                        is_inside = !is_inside
+                                    }
+                                }
+                                PipeKind::Vertical => is_inside = !is_inside,
+                            },
+                        };
+                        (is_inside, is_from_south, count_inside)
+                    },
+                )
+            })
+            .map(|(_, _, count_inside)| count_inside)
+            .sum())
     }
 }
 

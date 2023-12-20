@@ -1,7 +1,6 @@
 use crate::solver::{share_struct_solver, ProblemSolver};
 use anyhow::Context;
 use derive_more::{Deref, Display, FromStr};
-
 use std::rc::Rc;
 use std::sync::Mutex;
 use thiserror::Error;
@@ -135,24 +134,15 @@ enum SpringSectionStatus {
 
 impl SpringSectionStatus {
     fn maybe_operational(&self) -> bool {
-        match self {
-            SpringSectionStatus::Damaged => false,
-            _ => true,
-        }
+        !matches!(self, SpringSectionStatus::Damaged)
     }
 
     fn maybe_damaged(&self) -> bool {
-        match self {
-            SpringSectionStatus::Operational => false,
-            _ => true,
-        }
+        !matches!(self, SpringSectionStatus::Operational)
     }
 
     fn is_unknown(&self) -> bool {
-        match self {
-            SpringSectionStatus::Unknown => true,
-            _ => false,
-        }
+        matches!(self, SpringSectionStatus::Unknown)
     }
 }
 

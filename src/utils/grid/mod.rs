@@ -1,5 +1,4 @@
 pub mod grid_2d_vec;
-
 use derive_more::Display;
 use enumset::EnumSetType;
 use std::ops::Index;

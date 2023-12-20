@@ -73,7 +73,6 @@ mod tests {
     use crate::solver::AOC_PROBLEMS_SOLVER;
     use anyhow::Result;
     use std::path::PathBuf;
-    use std::time::SystemTime;
 
     const SESSION_PATH: &str = "data/session.txt";
     const INPUT_FOLDER_PATH: &str = "data";
