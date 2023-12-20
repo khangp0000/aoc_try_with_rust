@@ -9,9 +9,9 @@ use crate::solver::ProblemSolver;
 use anyhow::Context;
 use reqwest::blocking::Client;
 
-use derive_more::Deref;
+use derive_more::{Deref, Display};
 use derive_new::new;
-use std::fmt::{Display, Formatter};
+use std::fmt::Formatter;
 use std::fs;
 use std::fs::{create_dir_all, read_to_string, File};
 use std::path::{Path, PathBuf};

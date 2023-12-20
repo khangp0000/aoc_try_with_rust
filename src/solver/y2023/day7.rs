@@ -217,11 +217,7 @@ impl ProblemSolver for Day7Part2 {
 }
 
 fn get_hands_rank<'a, H: 'a, I: IntoIterator<Item = &'a (H, u32)>>(hands: I) -> u32 {
-    hands
-        .into_iter()
-        .enumerate()
-        .map(|(index, (_, bid))| (index as u32 + 1) * bid)
-        .sum::<u32>()
+    hands.into_iter().enumerate().map(|(index, (_, bid))| (index as u32 + 1) * bid).sum::<u32>()
 }
 
 #[cfg(test)]

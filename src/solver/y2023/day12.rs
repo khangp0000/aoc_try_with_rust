@@ -81,7 +81,7 @@ impl Spring {
 
         let computed_val = self.spring_statuses[spring_section_idx..]
             .iter()
-            .position(|&v| v == SpringSectionStatus::Damaged || v == SpringSectionStatus::Unknown)
+            .position(SpringSectionStatus::maybe_damaged)
             .map(|damaged_start_idx_offset| -> anyhow::Result<_> {
                 let damaged_start_idx = spring_section_idx + damaged_start_idx_offset;
                 if self.spring_statuses.len() - damaged_start_idx
@@ -92,30 +92,24 @@ impl Spring {
                 let operational_should_start_idx =
                     damaged_start_idx + self.damaged_count[damaged_count_idx] as usize;
 
-                let mut sum = 0;
+                let mut sum = 0_usize;
 
                 if self.spring_statuses[damaged_start_idx + 1..operational_should_start_idx]
                     .iter()
-                    .all(|&v| {
-                        v == SpringSectionStatus::Damaged || v == SpringSectionStatus::Unknown
-                    })
+                    .all(SpringSectionStatus::maybe_damaged)
                 {
-                    let advanced_damaged_count_idx = damaged_count_idx + 1;
                     if operational_should_start_idx == self.spring_statuses.len() {
-                        sum += 1;
-                    } else if self.spring_statuses[operational_should_start_idx]
-                        == SpringSectionStatus::Unknown
-                        || self.spring_statuses[operational_should_start_idx]
-                            == SpringSectionStatus::Operational
+                        sum += 1_usize;
+                    } else if self.spring_statuses[operational_should_start_idx].maybe_operational()
                     {
                         sum += self.combination_count(
                             operational_should_start_idx + 1,
-                            advanced_damaged_count_idx,
+                            damaged_count_idx + 1,
                         )?
                     }
                 }
 
-                sum += if self.spring_statuses[damaged_start_idx] == SpringSectionStatus::Unknown {
+                sum += if self.spring_statuses[damaged_start_idx].is_unknown() {
                     self.combination_count(damaged_start_idx + 1, damaged_count_idx)?
                 } else {
                     0_usize
@@ -137,6 +131,29 @@ enum SpringSectionStatus {
     Operational,
     Damaged,
     Unknown,
+}
+
+impl SpringSectionStatus {
+    fn maybe_operational(&self) -> bool {
+        match self {
+            SpringSectionStatus::Damaged => false,
+            _ => true,
+        }
+    }
+
+    fn maybe_damaged(&self) -> bool {
+        match self {
+            SpringSectionStatus::Operational => false,
+            _ => true,
+        }
+    }
+
+    fn is_unknown(&self) -> bool {
+        match self {
+            SpringSectionStatus::Unknown => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Error, Debug)]

@@ -118,7 +118,7 @@ pub enum GridDirection {
 }
 
 impl GridDirection {
-    pub fn reverse(&self) -> GridDirection {
+    pub const fn reverse(&self) -> GridDirection {
         match self {
             GridDirection::North => GridDirection::South,
             GridDirection::South => GridDirection::North,

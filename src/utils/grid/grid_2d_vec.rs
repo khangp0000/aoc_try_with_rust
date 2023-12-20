@@ -3,6 +3,7 @@ use anyhow::Result;
 use std::cell::OnceCell;
 use std::fmt::Debug;
 use std::ops::Index;
+use std::slice::Iter;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -59,6 +60,10 @@ impl<T> Grid2dVec<T> {
         let height = grid.len();
         let &width = predict_width.get_or_init(|| 0_usize);
         Ok(Self { grid, height, width })
+    }
+
+    pub fn rows(&self) -> Iter<'_, Vec<T>> {
+        return self.grid.iter();
     }
 
     pub fn map_out_place<F: FnMut(usize, usize, &T) -> G, G>(&self, mut map_fn: F) -> Grid2dVec<G> {

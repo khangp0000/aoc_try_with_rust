@@ -2,13 +2,16 @@ use crate::solver::{share_struct_solver, ProblemSolver};
 use crate::utils::graph::{dfs, dfs_full};
 use crate::utils::grid::grid_2d_vec::Grid2dVec;
 use crate::utils::grid::{Grid2d, GridDirection};
-use anyhow::{bail, Context};
-use derive_more::{Deref, Display, FromStr};
+use anyhow::{anyhow, bail, Context};
+use derive_more::{Deref, DerefMut, Display, FromStr};
 use enumset::{enum_set, EnumSet};
-use std::cell::{OnceCell, RefCell};
+use itertools::Itertools;
+use std::cell::OnceCell;
 use std::collections::{HashMap, HashSet};
-use std::fmt::Debug;
+use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
+use std::sync::{Arc, OnceLock};
+use num::Integer;
 use thiserror::Error;
 
 share_struct_solver!(Day10, Day10Part1, Day10Part2);
@@ -16,6 +19,7 @@ share_struct_solver!(Day10, Day10Part1, Day10Part2);
 pub struct Day10Part1 {
     grid: Grid2dVec<PositionKind>,
     start: (usize, usize),
+    pipe_path: OnceLock<Result<ChainPathRc, Arc<anyhow::Error>>>,
 }
 
 #[derive(Deref)]
@@ -24,23 +28,64 @@ pub struct Day10Part2(Rc<Day10Part1>);
 const CARDINAL: &[GridDirection; 4] =
     &[GridDirection::North, GridDirection::South, GridDirection::East, GridDirection::West];
 
-const HORIZONTAL_PIPE: &Pipe =
-    &Pipe { entrances: enum_set!(GridDirection::West | GridDirection::East) };
+const HORIZONTAL_PIPE: &Pipe = &Pipe::new(enum_set!(GridDirection::West | GridDirection::East));
 
-const VERTICAL_PIPE: &Pipe =
-    &Pipe { entrances: enum_set!(GridDirection::South | GridDirection::North) };
+const VERTICAL_PIPE: &Pipe = &Pipe::new(enum_set!(GridDirection::South | GridDirection::North));
 
-const L_PIPE_NORTH_EAST: &Pipe =
-    &Pipe { entrances: enum_set!(GridDirection::North | GridDirection::East) };
+const L_PIPE_NORTH_EAST: &Pipe = &Pipe::new(enum_set!(GridDirection::North | GridDirection::East));
 
-const L_PIPE_NORTH_WEST: &Pipe =
-    &Pipe { entrances: enum_set!(GridDirection::North | GridDirection::West) };
+const L_PIPE_NORTH_WEST: &Pipe = &Pipe::new(enum_set!(GridDirection::North | GridDirection::West));
 
-const L_PIPE_SOUTH_WEST: &Pipe =
-    &Pipe { entrances: enum_set!(GridDirection::South | GridDirection::West) };
+const L_PIPE_SOUTH_WEST: &Pipe = &Pipe::new(enum_set!(GridDirection::South | GridDirection::West));
 
-const L_PIPE_SOUTH_EAST: &Pipe =
-    &Pipe { entrances: enum_set!(GridDirection::South | GridDirection::East) };
+const L_PIPE_SOUTH_EAST: &Pipe = &Pipe::new(enum_set!(GridDirection::South | GridDirection::East));
+
+static CLOCK_WISE_COUNTER_CLOCKWISE: OnceLock<
+    HashMap<(GridDirection, GridDirection), (EnumSet<GridDirection>, EnumSet<GridDirection>)>,
+> = OnceLock::new();
+
+fn create_clockwise_counter_clockwise_map()
+-> HashMap<(GridDirection, GridDirection), (EnumSet<GridDirection>, EnumSet<GridDirection>)> {
+    let mut res = HashMap::new();
+    res.insert(
+        (GridDirection::West, GridDirection::East),
+        (GridDirection::South.into(), GridDirection::North.into()),
+    );
+    res.insert(
+        (GridDirection::South, GridDirection::North),
+        (GridDirection::East.into(), GridDirection::West.into()),
+    );
+    res.insert(
+        (GridDirection::North, GridDirection::East),
+        (GridDirection::South | GridDirection::West, EnumSet::empty()),
+    );
+    res.insert(
+        (GridDirection::North, GridDirection::West),
+        (EnumSet::empty(), GridDirection::South | GridDirection::East),
+    );
+    res.insert(
+        (GridDirection::South, GridDirection::East),
+        (EnumSet::empty(), GridDirection::North | GridDirection::West),
+    );
+    res.insert(
+        (GridDirection::South, GridDirection::West),
+        (GridDirection::North | GridDirection::East, EnumSet::empty()),
+    );
+
+    let reverse = res
+        .iter()
+        .map(|((entry, exit), (clockwise, counter_clockwise))| {
+            ((exit.clone(), entry.clone()), (counter_clockwise.clone(), clockwise.clone()))
+        })
+        .collect_vec();
+    reverse.into_iter().for_each(|(k, v)| {
+        if res.insert(k, v).is_some() {
+            unreachable!()
+        };
+    });
+
+    res
+}
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Display, Hash)]
 enum PipeKind {
@@ -71,12 +116,14 @@ struct Pipe {
 }
 
 impl Pipe {
+    const fn new(direction_set: EnumSet<GridDirection>) -> Self {
+        Self { entrances: direction_set }
+    }
+}
+
+impl Pipe {
     pub fn can_enter_from(&self, direction: GridDirection) -> Option<EnumSet<GridDirection>> {
-        if self.entrances.contains(direction) {
-            Some(self.entrances & !direction)
-        } else {
-            None
-        }
+        if self.entrances.contains(direction) { Some(self.entrances & !direction) } else { None }
     }
 }
 
@@ -145,6 +192,7 @@ impl FromStr for Day10Part1 {
         Ok(Day10Part1 {
             grid,
             start: starting_position.into_inner().context("Cannot find starting position")?,
+            pipe_path: OnceLock::new(),
         })
     }
 }
@@ -153,14 +201,95 @@ impl ProblemSolver for Day10Part1 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        Ok(self.find_pipe_loop()?.0.len() / 2)
+        let res = self.pipe_path.get_or_init(|| self.find_pipe_loop().map_err(|e| Arc::new(e)));
+        return res.clone().map(|path| path.len() / 2).map_err(|e| anyhow!(e));
+    }
+}
+
+#[derive(Eq, PartialEq, Clone, Debug)]
+struct ChainPath {
+    prev: Option<ChainPathRc>,
+    position_and_facing: ((usize, usize), GridDirection),
+    enter_direction: Option<GridDirection>,
+    len: usize,
+}
+
+#[derive(Deref, DerefMut, Eq, PartialEq, Clone, Debug, Display)]
+struct ChainPathRc(Rc<ChainPath>);
+
+impl ChainPathRc {
+    fn start(position_and_facing: ((usize, usize), GridDirection)) -> ChainPathRc {
+        return ChainPathRc(Rc::new(ChainPath {
+            prev: None,
+            position_and_facing,
+            enter_direction: None,
+            len: 1,
+        }));
+    }
+}
+
+trait ChainPathTrait {
+    fn push(&self, item: ((usize, usize), GridDirection)) -> ChainPathRc;
+    fn len(&self) -> usize;
+}
+
+impl Display for ChainPath {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match &self.prev {
+            None => write!(f, "{:?}", self.position_and_facing),
+            Some(prev_chain) => {
+                write!(f, "{}->{:?}", prev_chain.as_ref(), self.position_and_facing)
+            }
+        }
+    }
+}
+
+impl ChainPathTrait for ChainPathRc {
+    fn push(&self, position_and_facing: ((usize, usize), GridDirection)) -> ChainPathRc {
+        return ChainPathRc(Rc::new(ChainPath {
+            prev: Some(self.clone()),
+            position_and_facing,
+            enter_direction: Some(self.position_and_facing.1.reverse()),
+            len: self.len + 1,
+        }));
+    }
+
+    fn len(&self) -> usize {
+        return self.len;
+    }
+}
+
+impl IntoIterator for ChainPathRc {
+    type Item = ((usize, usize), (Option<GridDirection>, GridDirection));
+    type IntoIter = ChainPathIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        return ChainPathIter { current: Some(self) };
+    }
+}
+
+struct ChainPathIter {
+    current: Option<ChainPathRc>,
+}
+
+impl Iterator for ChainPathIter {
+    type Item = ((usize, usize), (Option<GridDirection>, GridDirection));
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match &self.current {
+            None => None,
+            Some(chain) => {
+                let (pos, exit) = chain.position_and_facing.clone();
+                let enter = chain.enter_direction.clone();
+                self.current = chain.prev.clone();
+                return Some((pos, (enter, exit)));
+            }
+        }
     }
 }
 
 impl Day10Part1 {
-    fn find_pipe_loop(
-        &self,
-    ) -> anyhow::Result<Rc<(HashMap<(usize, usize), GridDirection>, GridDirection)>> {
+    fn find_pipe_loop(&self) -> anyhow::Result<ChainPathRc> {
         let result =
             CARDINAL.iter().map(|direction| (self.start, *direction)).find_map(|start_state| {
                 dfs(
@@ -203,17 +332,18 @@ impl Day10Part1 {
                         Some(self.start)
                             == self.grid.move_from_coordinate_to_direction(x, y, facing)
                     },
-                    Rc::new((HashMap::new(), start_state.1)),
-                    |path, (coordinate, facing)| {
-                        let (mut path, _) = path.as_ref().clone();
-                        path.insert(*coordinate, *facing);
-                        Rc::new((path, *facing))
+                    None,
+                    |path, next_coordinate_and_facing| {
+                        Some(path.as_ref().map_or_else(
+                            || ChainPathRc::start(next_coordinate_and_facing.clone()),
+                            |path: &ChainPathRc| path.push(next_coordinate_and_facing.clone()),
+                        ))
                     },
                 )
             });
         match result {
             None => bail!("Cannot find a path loop back to start"),
-            Some((path, _)) => Ok(path),
+            Some((path, _)) => Ok(path.unwrap()),
         }
     }
 }
@@ -222,126 +352,103 @@ impl ProblemSolver for Day10Part2 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        let (loop_pipe, last_face) = Rc::try_unwrap(self.find_pipe_loop()?).unwrap();
+        let chain_path = self
+            .pipe_path
+            .get_or_init(|| self.find_pipe_loop().map_err(|e| Arc::new(e)))
+            .clone()
+            .map_err(|e| anyhow!(e))?;
+
+        let start_enter = chain_path.position_and_facing.1.reverse();
+        let path_hash_map: HashMap<_, _> = chain_path
+            .into_iter()
+            .map(|(pos, (enter, exit))| (pos, (enter.unwrap_or(start_enter), exit)))
+            .collect();
+
         let grid = &self.grid.map_out_place(|x, y, t| {
-            if loop_pipe.contains_key(&(x, y)) { *t } else { PositionKind::Ground }
+            if path_hash_map.contains_key(&(x, y)) { *t } else { PositionKind::Ground }
         });
 
-        let start_entrance = last_face.reverse();
-        let (clock_wise, counter_clock_wise) = loop_pipe.iter().try_fold(
-            (RefCell::new(Some(Vec::new())), RefCell::new(Some(Vec::new()))),
-            |(mut clock_wise, counter_clock_wise), ((x, y), facing)| {
-                let mut non_facing = *facing;
-                let mut swapped = false;
-                let acc = Rc::new(());
-                let entrance = match grid[(*x, *y)] {
-                    PositionKind::Start => start_entrance,
-                    PositionKind::Ground => unreachable!(),
-                    PositionKind::Pipe(pipe_kind) => pipe_kind
-                        .can_enter_from(*facing)
-                        .unwrap()
-                        .into_iter()
-                        .try_fold(None, |opt, direction| {
-                            if opt.is_none() {
-                                Ok(Some(direction))
-                            } else {
-                                bail!("There can't be two entrance")
-                            }
-                        })?
-                        .context("There can't be zero entrance")?,
-                };
-
-                (0..3).try_for_each(|_| {
-                    non_facing = non_facing.clock_wise_90();
-                    if non_facing == entrance {
-                        if swapped {
-                            bail!("Swapped twice, should never happens in valid input");
-                        }
-                        swapped = true;
-                        clock_wise.swap(&counter_clock_wise);
-                    }
-                    match grid.move_from_coordinate_to_direction(x, y, &non_facing) {
-                        None => {
-                            clock_wise.replace(None);
-                        }
-                        Some(pos) => {
-                            match grid[pos] {
-                                PositionKind::Ground => match clock_wise.get_mut() {
-                                    Some(vec) => {
-                                        vec.push((acc.clone(), pos));
-                                    }
-                                    _ => (),
-                                },
-                                _ => (),
-                            };
-                        }
-                    }
-                    Ok(())
-                })?;
-
-                Ok::<_, anyhow::Error>((counter_clock_wise, clock_wise))
-            },
-        )?;
-
-        let clock_wise = clock_wise.into_inner();
-        if let Some(value) = clock_wise.and_then(|mut work_stack| {
-            let mut visited = HashSet::new();
-            if dfs_full(
-                &mut work_stack,
-                &mut visited,
-                |(x, y)| {
-                    let x = *x;
-                    let y = *y;
-                    CARDINAL
+        let (clockwise, counter_clockwise) = path_hash_map.into_iter().fold(
+            (Some(Vec::new()), Some(Vec::new())),
+            |(cw_vec, ccw_vec), ((x, y), enter_exit_flow)| {
+                let (curr_cw, curr_ccw) = CLOCK_WISE_COUNTER_CLOCKWISE
+                    .get_or_init(|| create_clockwise_counter_clockwise_map())
+                    .get(&enter_exit_flow)
+                    .unwrap();
+                let cw_vec = cw_vec.and_then(|cw_vec| {
+                    curr_cw
                         .iter()
-                        .filter_map(move |direction| {
-                            grid.move_from_coordinate_to_direction(&x, &y, direction)
+                        .map(|dir| grid.move_from_coordinate_to_direction(&x, &y, &dir))
+                        .try_fold(cw_vec, |mut cw_vec, pos| {
+                            pos.map(|pos| {
+                                if grid[pos] == PositionKind::Ground {
+                                    cw_vec.push(pos);
+                                }
+                                cw_vec
+                            })
                         })
-                        .filter(|(x, y)| grid[(*x, *y)] == PositionKind::Ground)
-                },
-                |_, (x, y)| *x == 0 || *y == 0 || *x == grid.width() - 1 || *y == grid.width() - 1,
-                |acc, _| acc.clone(),
-            )
-            .is_none()
-            {
-                Some(visited.len())
-            } else {
-                None
-            }
-        }) {
+                });
+
+                let ccw_vec = ccw_vec.and_then(|ccw_vec| {
+                    curr_ccw
+                        .iter()
+                        .map(|dir| grid.move_from_coordinate_to_direction(&x, &y, &dir))
+                        .try_fold(ccw_vec, |mut ccw_vec, pos| {
+                            pos.map(|pos| {
+                                if grid[pos] == PositionKind::Ground {
+                                    ccw_vec.push(pos);
+                                }
+                                ccw_vec
+                            })
+                        })
+                });
+
+                (cw_vec, ccw_vec)
+            },
+        );
+
+        if let Some(value) =
+            clockwise.and_then(|starting_pos| flooding_count_wall_return_none(grid, starting_pos))
+        {
             return Ok(value);
         }
 
-        let counter_clock_wise = counter_clock_wise.into_inner();
-
-        if let Some(value) = counter_clock_wise.and_then(|mut work_stack| {
-            let mut visited = HashSet::new();
-            if dfs_full(
-                &mut work_stack,
-                &mut visited,
-                |(x, y)| {
-                    let x = *x;
-                    let y = *y;
-                    CARDINAL
-                        .iter()
-                        .filter_map(move |direction| {
-                            grid.move_from_coordinate_to_direction(&x, &y, direction)
-                        })
-                        .filter(|(x, y)| grid[(*x, *y)] == PositionKind::Ground)
-                },
-                |_, (x, y)| *x == 0 || *y == 0 || *x == grid.width() - 1 || *y == grid.width() - 1,
-                |acc, _| acc.clone(),
-            )
-            .is_none()
-            {
-                Some(visited.len())
-            } else {
-                None
-            }
-        }) {
+        if let Some(value) = counter_clockwise
+            .and_then(|starting_pos| flooding_count_wall_return_none(grid, starting_pos))
+        {
             return Ok(value);
         }
         bail!("Somehow both side can reach the edge ¯\\_(ツ)_/¯")
+    }
+}
+
+fn flooding_count_wall_return_none(
+    grid: &Grid2dVec<PositionKind>,
+    starting_pos: Vec<(usize, usize)>,
+) -> Option<usize> {
+    let mut work_stack = starting_pos.into_iter().map(|pos| ((), pos)).collect_vec();
+    let mut visited = HashSet::new();
+    if dfs_full(
+        &mut work_stack,
+        &mut visited,
+        |(x, y)| {
+            let x = *x;
+            let y = *y;
+            CARDINAL
+                .iter()
+                .filter_map(move |direction| {
+                    grid.move_from_coordinate_to_direction(&x, &y, direction)
+                })
+                .filter(|(x, y)| grid[(*x, *y)] == PositionKind::Ground)
+        },
+        |_, (x, y)| *x == 0 || *y == 0 || *x == grid.width() - 1 || *y == grid.width() - 1,
+        |acc, _| acc.clone(),
+    )
+    .is_none()
+    {
+        Some(visited.len())
+    } else {
+        None
     }
 }
 
