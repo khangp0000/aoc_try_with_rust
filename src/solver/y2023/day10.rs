@@ -152,7 +152,7 @@ impl ProblemSolver for Day10Part1 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        let res = self.pipe_path.get_or_init(|| self.find_pipe_loop().map_err(Arc::new));
+        let res = self.get_pipe_path();
         res.clone().map(|path| path.len() / 2).map_err(|e| anyhow!(e))
     }
 }
@@ -243,6 +243,10 @@ impl Iterator for ChainPathIter {
 }
 
 impl Day10Part1 {
+    fn get_pipe_path(&self) -> Result<ChainPathRc, Arc<anyhow::Error>> {
+        self.pipe_path.get_or_init(|| self.find_pipe_loop().map_err(Arc::new)).clone()
+    }
+
     fn find_pipe_loop(&self) -> anyhow::Result<ChainPathRc> {
         let result =
             CARDINAL.iter().map(|direction| (self.start, *direction)).find_map(|start_state| {
@@ -306,11 +310,7 @@ impl ProblemSolver for Day10Part2 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        let chain_path = self
-            .pipe_path
-            .get_or_init(|| self.find_pipe_loop().map_err(Arc::new))
-            .clone()
-            .map_err(|e| anyhow!(e))?;
+        let chain_path = self.get_pipe_path().map_err(|e| anyhow!(e))?;
 
         let start_enter = chain_path.position_and_facing.1.reverse();
         let start_exit = chain_path.start.clone().upgrade().unwrap().position_and_facing.1;

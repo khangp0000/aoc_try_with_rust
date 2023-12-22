@@ -19,30 +19,30 @@ impl FromStr for Day3 {
 }
 
 impl TwoPartsProblemSolver for Day3 {
-    type Solution1Type = u64;
-    type Solution2Type = u64;
+    type Solution1Type = usize;
+    type Solution2Type = usize;
 
-    fn solve_1(&self) -> Result<u64> {
+    fn solve_1(&self) -> Result<usize> {
         (0..self.board.len()).map(|i| self.process_line_1(i)).sum()
     }
 
-    fn solve_2(&self) -> Result<u64> {
+    fn solve_2(&self) -> Result<usize> {
         let mut container = HashMap::new();
 
         (0..self.board.len()).try_for_each(|i| self.process_line_2(&mut container, i))?;
 
-        let sum_prod: u64 = container
+        let sum_prod: usize = container
             .iter()
             .filter(|(_, vals)| vals.len() == 2)
-            .map(|(_, vals)| vals.iter().product::<u64>())
+            .map(|(_, vals)| vals.iter().product::<usize>())
             .sum();
         Ok(sum_prod)
     }
 }
 
 impl Day3 {
-    fn process_line_1(&self, idx: usize) -> Result<u64> {
-        let mut sum = 0_u64;
+    fn process_line_1(&self, idx: usize) -> Result<usize> {
+        let mut sum = 0_usize;
         let line = self.board.get(idx).with_context(|| format!("Invalid line number {}", idx))?;
         let mut curr_idx = 0;
         while curr_idx < line.len() {
@@ -78,7 +78,7 @@ impl Day3 {
                             .iter()
                             .any(is_symbol))
                 {
-                    sum += parse_u64_str_from_bytes(&line[left..right])?;
+                    sum += parse_usize_str_from_bytes(&line[left..right])?;
                 }
 
                 curr_idx = right;
@@ -91,7 +91,7 @@ impl Day3 {
 
     fn process_line_2(
         &self,
-        container: &mut HashMap<(usize, usize), Vec<u64>>,
+        container: &mut HashMap<(usize, usize), Vec<usize>>,
         idx: usize,
     ) -> Result<()> {
         let line = &self.board[idx];
@@ -111,7 +111,7 @@ impl Day3 {
                 }
 
                 let value = OnceCell::new();
-                let value_init_f = || parse_u64_str_from_bytes(&line[left..right]).unwrap();
+                let value_init_f = || parse_usize_str_from_bytes(&line[left..right]).unwrap();
 
                 let c_left = if left == 0_usize { 0_usize } else { left - 1 };
 
@@ -176,11 +176,11 @@ fn is_symbol(c: &u8) -> bool {
     !c.is_ascii_digit() && *c != b'.'
 }
 
-fn parse_u64_str_from_bytes(input: &[u8]) -> anyhow::Result<u64> {
-    let mut res = 0_u64;
+fn parse_usize_str_from_bytes(input: &[u8]) -> anyhow::Result<usize> {
+    let mut res = 0_usize;
     for value in input {
-        let curr_val = (*value - b'0') as u64;
-        if curr_val > 9_u64 {
+        let curr_val = (*value - b'0') as usize;
+        if curr_val > 9_usize {
             bail!("Invalid digit byte");
         }
         res *= 10;

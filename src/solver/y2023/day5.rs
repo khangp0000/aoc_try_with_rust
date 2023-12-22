@@ -3,7 +3,8 @@ use crate::utils::int_range::IntRange;
 use crate::utils::int_trait::Integer;
 use anyhow::Result;
 use anyhow::{bail, Context};
-use regex::Regex;
+
+use crate::utils::get_double_newline_regex;
 use std::borrow::Cow;
 use std::cmp::min;
 use std::str::FromStr;
@@ -17,7 +18,7 @@ impl<T: Integer> FromStr for Day5<T> {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let double_newline_regex = Regex::new(r"\r?\n\r?\n")?;
+        let double_newline_regex = get_double_newline_regex().clone();
         let mut parts = double_newline_regex.split(s);
         let seed_line =
             parts.next().with_context(|| format!("No seed line found from input: {:?}", s))?;

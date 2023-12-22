@@ -2,6 +2,7 @@ use crate::solver::y2023::day1::Day1;
 use crate::solver::y2023::day10::Day10;
 use crate::solver::y2023::day11::Day11;
 use crate::solver::y2023::day12::Day12;
+use crate::solver::y2023::day13::Day13;
 use crate::solver::y2023::day2::Day2;
 use crate::solver::y2023::day3::Day3;
 use crate::solver::y2023::day4::Day4;
@@ -20,7 +21,7 @@ pub mod day1;
 pub mod day10;
 pub mod day11;
 pub mod day12;
-// mod day13;
+pub mod day13;
 pub mod day2;
 pub mod day3;
 pub mod day4;
@@ -43,4 +44,5 @@ pub const Y2023_SOLVER: Map<u8, fn(u16, u8, &Path, &Path) -> Result<Box<dyn Disp
     10_u8 => boxed_try_get_input_and_solve!(Day10),
     11_u8 => boxed_try_get_input_and_solve!(Day11),
     12_u8 => boxed_try_get_input_and_solve!(Day12),
+    13_u8 => boxed_try_get_input_and_solve!(Day13),
 };

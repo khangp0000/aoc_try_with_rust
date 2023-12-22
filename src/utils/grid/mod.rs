@@ -129,17 +129,4 @@ impl GridDirection {
             GridDirection::NorthWest => GridDirection::SouthEast,
         }
     }
-
-    pub fn clock_wise_90(&self) -> GridDirection {
-        match self {
-            GridDirection::North => GridDirection::East,
-            GridDirection::South => GridDirection::West,
-            GridDirection::East => GridDirection::South,
-            GridDirection::West => GridDirection::North,
-            GridDirection::SouthWest => GridDirection::NorthWest,
-            GridDirection::SouthEast => GridDirection::SouthWest,
-            GridDirection::NorthEast => GridDirection::SouthEast,
-            GridDirection::NorthWest => GridDirection::NorthEast,
-        }
-    }
 }

@@ -1,14 +1,15 @@
 use crate::solver::{share_struct_solver, ProblemSolver};
 use derive_more::{Deref, FromStr};
 use itertools::Itertools;
+use std::collections::{BTreeSet, HashMap};
 use std::rc::Rc;
 
 share_struct_solver!(Day11, Day11Part1, Day11Part2);
 
 pub struct Day11Part1 {
     galaxies: Vec<(usize, usize)>,
-    sorted_x: Vec<usize>,
-    sorted_y: Vec<usize>,
+    x_to_index: HashMap<usize, usize>,
+    y_to_index: HashMap<usize, usize>,
 }
 
 #[derive(Deref)]
@@ -27,20 +28,21 @@ impl FromStr for Day11Part1 {
                     .filter_map(move |(x, b)| if b == b'#' { Some((x, y)) } else { None })
             })
             .collect::<Vec<_>>();
-        let (mut non_sorted_x, sorted_y) = galaxies.iter().fold(
-            (Vec::new(), Vec::new()),
-            |(mut non_sorted_x, mut sorted_y), (x, y)| {
-                non_sorted_x.push(*x);
-                if Some(y) != sorted_y.last() {
-                    sorted_y.push(*y);
-                }
-                (non_sorted_x, sorted_y)
+        let (sorted_x, y_to_index) = galaxies.iter().fold(
+            (BTreeSet::new(), HashMap::new()),
+            |(mut sorting_x, mut y_to_index), (x, y)| {
+                sorting_x.insert(*x);
+                let current_y_to_index_len = y_to_index.len();
+                y_to_index.entry(*y).or_insert(current_y_to_index_len);
+                (sorting_x, y_to_index)
             },
         );
 
-        non_sorted_x.sort_unstable();
-        non_sorted_x.dedup();
-        Ok(Day11Part1 { galaxies, sorted_x: non_sorted_x, sorted_y })
+        Ok(Day11Part1 {
+            galaxies,
+            x_to_index: sorted_x.into_iter().enumerate().map(|(idx, val)| (val, idx)).collect(),
+            y_to_index,
+        })
     }
 }
 
@@ -59,8 +61,8 @@ impl Day11Part1 {
             .iter()
             .tuple_combinations::<(_, _)>()
             .map(|((lx, ly), (rx, ry))| {
-                find_galaxy_1d_distance(lx, rx, expand_factor, &self.sorted_x)
-                    + find_galaxy_1d_distance(ly, ry, expand_factor, &self.sorted_y)
+                find_galaxy_1d_distance(lx, rx, expand_factor, &self.x_to_index)
+                    + find_galaxy_1d_distance(ly, ry, expand_factor, &self.y_to_index)
             })
             .sum::<usize>();
     }
@@ -70,7 +72,7 @@ pub fn find_galaxy_1d_distance(
     d_1: &usize,
     d_2: &usize,
     expand_factor: &usize,
-    sorted_dedup_d_with_galaxies: &[usize],
+    d_to_index: &HashMap<usize, usize>,
 ) -> usize {
     let lo;
     let hi;
@@ -84,8 +86,7 @@ pub fn find_galaxy_1d_distance(
 
     let mut diff = hi - lo;
     if diff > 1 {
-        let index_diff = sorted_dedup_d_with_galaxies.binary_search(hi).unwrap()
-            - sorted_dedup_d_with_galaxies.binary_search(lo).unwrap();
+        let index_diff = d_to_index[hi] - d_to_index[lo];
         diff = expand_factor * (diff - index_diff) + (index_diff);
     }
 

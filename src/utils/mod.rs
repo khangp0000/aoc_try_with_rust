@@ -2,11 +2,13 @@ pub mod graph;
 pub mod grid;
 pub mod int_range;
 pub mod int_trait;
+
 use crate::solver::ProblemSolver;
 use anyhow::Context;
 use anyhow::Result;
 use derive_more::{Deref, Display};
 use derive_new::new;
+use regex::Regex;
 use reqwest::blocking::Client;
 use std::fmt::Formatter;
 use std::fs;
@@ -30,6 +32,11 @@ macro_rules! boxed_try_get_input_and_solve {
 }
 
 pub(crate) use boxed_try_get_input_and_solve;
+
+pub fn get_double_newline_regex() -> &'static Regex {
+    static DOUBLE_NEWLINE_REGEX: OnceLock<Regex> = OnceLock::new();
+    return DOUBLE_NEWLINE_REGEX.get_or_init(|| Regex::new(r"[ \t]*\r?\n[ \t]*\r?\n").unwrap());
+}
 
 #[derive(Error, Debug)]
 pub enum Error {
