@@ -634,6 +634,7 @@ dependencies = [
  "derive_more",
  "dyn-iter",
  "enumset",
+ "indexmap",
  "indoc",
  "itertools",
  "num",
