@@ -1,14 +1,15 @@
 use crate::solver::{share_struct_solver, ProblemSolver};
 use anyhow::Context;
 use derive_more::{Deref, Display, FromStr};
+use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::Mutex;
+
 use thiserror::Error;
 
 share_struct_solver!(Day12, Day12Part1, Day12Part2);
 
 pub struct Day12Part1 {
-    springs: Mutex<Vec<Spring>>,
+    springs: RefCell<Vec<Spring>>,
 }
 
 struct Spring {
@@ -190,7 +191,7 @@ impl FromStr for Day12Part1 {
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
 
-        Ok(Day12Part1 { springs: Mutex::new(springs) })
+        Ok(Day12Part1 { springs: RefCell::new(springs) })
     }
 }
 
@@ -198,7 +199,7 @@ impl ProblemSolver for Day12Part1 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        return self.springs.lock().unwrap().iter_mut().map(|s| s.combination_count(0, 0)).sum();
+        return self.springs.borrow_mut().iter_mut().map(|s| s.combination_count(0, 0)).sum();
     }
 }
 
@@ -208,8 +209,7 @@ impl ProblemSolver for Day12Part2 {
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
         return self
             .springs
-            .lock()
-            .unwrap()
+            .borrow()
             .iter()
             .map(|s| s.expand(5))
             .map(|mut s| s.combination_count(0, 0))

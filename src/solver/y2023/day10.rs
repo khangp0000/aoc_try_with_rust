@@ -9,7 +9,7 @@ use std::cell::OnceCell;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::rc::{Rc, Weak};
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 use thiserror::Error;
 
 share_struct_solver!(Day10, Day10Part1, Day10Part2);
@@ -17,7 +17,7 @@ share_struct_solver!(Day10, Day10Part1, Day10Part2);
 pub struct Day10Part1 {
     grid: Grid2dVec<PositionKind>,
     start: (usize, usize),
-    pipe_path: OnceLock<Result<ChainPathRc, Arc<anyhow::Error>>>,
+    pipe_path: OnceCell<Result<ChainPathRc, Arc<anyhow::Error>>>,
 }
 
 #[derive(Deref)]
@@ -143,7 +143,7 @@ impl FromStr for Day10Part1 {
         Ok(Day10Part1 {
             grid,
             start: starting_position.into_inner().context("Cannot find starting position")?,
-            pipe_path: OnceLock::new(),
+            pipe_path: OnceCell::new(),
         })
     }
 }
