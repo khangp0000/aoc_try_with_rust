@@ -151,8 +151,8 @@ impl ProblemSolver for Day13Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day13::{Day13, Day13Part1};
-    use crate::solver::{ProblemSolver, TwoPartsProblemSolver};
+    use crate::solver::y2023::day13::Day13;
+    use crate::solver::TwoPartsProblemSolver;
 
     use indoc::indoc;
 
@@ -178,7 +178,6 @@ mod tests {
 
     #[test]
     fn test_sample_1() -> anyhow::Result<()> {
-        println!("asdas {:?}", Day13Part1::from_str(SAMPLE_INPUT_1)?.solve()?);
         assert_eq!(Day13::from_str(SAMPLE_INPUT_1)?.solve_1()?, 405);
         Ok(())
     }

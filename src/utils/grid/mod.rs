@@ -23,83 +23,102 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
         x < self.width() && y < self.height()
     }
 
-    fn north_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
-        if y == 0_usize || y > self.height() {
-            return None;
-        }
-        Some((x, y - 1))
+    fn north_coordinate_from(
+        &self,
+        &x: &usize,
+        &y: &usize,
+        &step: &usize,
+    ) -> Option<(usize, usize)> {
+        y.checked_sub(step).filter(|y| self.contains(&x, y)).map(|y| (x, y))
     }
 
-    fn south_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
-        let height = self.height();
-        if height == 0 || y >= height - 1 {
-            return None;
-        }
-        Some((x, y + 1))
+    fn south_coordinate_from(
+        &self,
+        &x: &usize,
+        &y: &usize,
+        &step: &usize,
+    ) -> Option<(usize, usize)> {
+        y.checked_add(step).filter(|y| self.contains(&x, y)).map(|y| (x, y))
     }
 
-    fn west_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
-        if x == 0_usize || x > self.width() {
-            return None;
-        }
-        Some((x - 1, y))
+    fn west_coordinate_from(
+        &self,
+        &x: &usize,
+        &y: &usize,
+        &step: &usize,
+    ) -> Option<(usize, usize)> {
+        x.checked_sub(step).filter(|x| self.contains(x, &y)).map(|x| (x, y))
     }
 
-    fn east_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
-        let width = self.width();
-        if width == 0 || x >= width - 1 {
-            return None;
-        }
-        Some((x + 1, y))
+    fn east_coordinate_from(
+        &self,
+        &x: &usize,
+        &y: &usize,
+        &step: &usize,
+    ) -> Option<(usize, usize)> {
+        x.checked_add(step).filter(|x| self.contains(x, &y)).map(|x| (x, y))
     }
 
-    fn north_west_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
-        if y == 0_usize || y > self.height() || x == 0_usize || x > self.width() {
-            return None;
-        }
-        Some((x - 1, y - 1))
+    fn north_west_coordinate_from(
+        &self,
+        &x: &usize,
+        &y: &usize,
+        &step: &usize,
+    ) -> Option<(usize, usize)> {
+        x.checked_sub(step)
+            .and_then(|x| y.checked_sub(step).map(|y| (x, y)))
+            .filter(|(x, y)| self.contains(x, y))
     }
 
-    fn north_east_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
-        let width = self.width();
-        if y == 0_usize || y > self.height() || width == 0 || x >= width - 1 {
-            return None;
-        }
-        Some((x + 1, y - 1))
+    fn north_east_coordinate_from(
+        &self,
+        &x: &usize,
+        &y: &usize,
+        &step: &usize,
+    ) -> Option<(usize, usize)> {
+        x.checked_add(step)
+            .and_then(|x| y.checked_sub(step).map(|y| (x, y)))
+            .filter(|(x, y)| self.contains(x, y))
     }
 
-    fn south_west_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
-        let height = self.height();
-        if height == 0 || y >= height - 1 || x == 0_usize || x > self.width() {
-            return None;
-        }
-        Some((x - 1, y + 1))
+    fn south_west_coordinate_from(
+        &self,
+        &x: &usize,
+        &y: &usize,
+        &step: &usize,
+    ) -> Option<(usize, usize)> {
+        x.checked_sub(step)
+            .and_then(|x| y.checked_add(step).map(|y| (x, y)))
+            .filter(|(x, y)| self.contains(x, y))
     }
 
-    fn south_east_coordinate_from(&self, &x: &usize, &y: &usize) -> Option<(usize, usize)> {
-        let width = self.width();
-        let height = self.height();
-        if height == 0 || y >= height - 1 || width == 0 || x >= width - 1 {
-            return None;
-        }
-        Some((x + 1, y + 1))
+    fn south_east_coordinate_from(
+        &self,
+        &x: &usize,
+        &y: &usize,
+        &step: &usize,
+    ) -> Option<(usize, usize)> {
+        x.checked_add(step)
+            .and_then(|x| y.checked_add(step).map(|y| (x, y)))
+            .filter(|(x, y)| self.contains(x, y))
     }
 
     fn move_from_coordinate_to_direction(
         &self,
         x: &usize,
         y: &usize,
+        step: &usize,
         direction: &GridDirection,
     ) -> Option<(usize, usize)> {
         match direction {
-            GridDirection::North => self.north_coordinate_from(x, y),
-            GridDirection::South => self.south_coordinate_from(x, y),
-            GridDirection::East => self.east_coordinate_from(x, y),
-            GridDirection::West => self.west_coordinate_from(x, y),
-            GridDirection::SouthWest => self.south_west_coordinate_from(x, y),
-            GridDirection::SouthEast => self.south_east_coordinate_from(x, y),
-            GridDirection::NorthEast => self.north_east_coordinate_from(x, y),
-            GridDirection::NorthWest => self.north_west_coordinate_from(x, y),
+            GridDirection::North => self.north_coordinate_from(x, y, step),
+            GridDirection::South => self.south_coordinate_from(x, y, step),
+            GridDirection::East => self.east_coordinate_from(x, y, step),
+            GridDirection::West => self.west_coordinate_from(x, y, step),
+            GridDirection::SouthWest => self.south_west_coordinate_from(x, y, step),
+            GridDirection::SouthEast => self.south_east_coordinate_from(x, y, step),
+            GridDirection::NorthEast => self.north_east_coordinate_from(x, y, step),
+            GridDirection::NorthWest => self.north_west_coordinate_from(x, y, step),
         }
     }
 }
@@ -127,6 +146,19 @@ impl GridDirection {
             GridDirection::SouthEast => GridDirection::NorthWest,
             GridDirection::NorthEast => GridDirection::SouthWest,
             GridDirection::NorthWest => GridDirection::SouthEast,
+        }
+    }
+
+    pub fn clock_wise_90(&self) -> GridDirection {
+        match self {
+            GridDirection::North => GridDirection::East,
+            GridDirection::South => GridDirection::West,
+            GridDirection::East => GridDirection::South,
+            GridDirection::West => GridDirection::North,
+            GridDirection::SouthWest => GridDirection::NorthWest,
+            GridDirection::SouthEast => GridDirection::SouthWest,
+            GridDirection::NorthEast => GridDirection::SouthEast,
+            GridDirection::NorthWest => GridDirection::NorthEast,
         }
     }
 }

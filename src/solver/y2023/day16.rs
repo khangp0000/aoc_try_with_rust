@@ -137,7 +137,7 @@ impl Day16Part1 {
                     .iter()
                     .filter_map(move |next_face| {
                         self.grid
-                            .move_from_coordinate_to_direction(&x, &y, next_face)
+                            .move_from_coordinate_to_direction(&x, &y, &1, next_face)
                             .map(|(x, y)| (x, y, *next_face))
                     })
             },

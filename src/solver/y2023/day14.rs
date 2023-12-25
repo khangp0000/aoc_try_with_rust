@@ -333,7 +333,7 @@ impl ProblemSolver for Day14Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day14::{Day14, WeirdGrid};
+    use crate::solver::y2023::day14::Day14;
     use crate::solver::TwoPartsProblemSolver;
 
     use indoc::indoc;
@@ -355,19 +355,6 @@ mod tests {
 
     #[test]
     fn test_sample_1() -> anyhow::Result<()> {
-        let mut current = WeirdGrid::from_str(SAMPLE_INPUT_1)?;
-        println!("{}", current);
-        println!();
-        current = current.tilt_cycle();
-        println!("{}", current);
-        println!();
-        current = current.tilt_cycle();
-        println!("{}", current);
-        println!();
-        current = current.tilt_cycle();
-        println!("{}", current);
-        println!();
-
         assert_eq!(Day14::from_str(SAMPLE_INPUT_1)?.solve_1()?, 136);
         Ok(())
     }
