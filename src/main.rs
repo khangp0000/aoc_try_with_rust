@@ -30,10 +30,19 @@ struct Args {
     /// Which days are you looking at.
     #[arg(short, long, value_delimiter = ',')]
     days: Vec<u8>,
+
+    /// How many thread to use (only apply to problem using multiple thread,
+    /// problems are still solve sequentially, default to number of core).
+    #[arg(short, long, value_delimiter = ',')]
+    threads: Option<usize>,
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(args.threads.unwrap_or_else(num_cpus::get))
+        .build_global()
+        .unwrap();
     let solvers = AOC_PROBLEMS_SOLVER.get_entry(&args.year);
     let (day_mapper_solvers, mut days) = match &solvers {
         None => bail!(format!("There is no solver for selected year {}", args.year)),

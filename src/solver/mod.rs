@@ -112,5 +112,42 @@ macro_rules! share_struct_solver {
     };
 }
 
+macro_rules! share_struct_parallel_solver {
+    ($wrapper:ident, $solver1:ident, $solver2:ident ) => {
+        pub struct $wrapper(std::sync::Arc<$solver1>, $solver2);
+
+        impl std::str::FromStr for $wrapper {
+            type Err = anyhow::Error;
+
+            fn from_str(s: &str) -> anyhow::Result<Self> {
+                let rc = std::sync::Arc::new($solver1::from_str(s)?);
+                Ok($wrapper(rc.clone(), $solver2(rc)))
+            }
+        }
+
+        impl crate::solver::TwoPartsProblemSolver for $wrapper {
+            type Solution1Type = <$solver1 as ProblemSolver>::SolutionType;
+            type Solution2Type = <$solver2 as ProblemSolver>::SolutionType;
+
+            fn solve_1(&self) -> anyhow::Result<Self::Solution1Type> {
+                self.0.solve()
+            }
+
+            fn solve_2(&self) -> anyhow::Result<Self::Solution2Type> {
+                self.1.solve()
+            }
+        }
+
+        impl std::str::FromStr for $solver2 {
+            type Err = anyhow::Error;
+
+            fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+                Ok($solver2(std::sync::Arc::new($solver1::from_str(s)?)))
+            }
+        }
+    };
+}
+
 pub(crate) use combine_solver;
+pub(crate) use share_struct_parallel_solver;
 pub(crate) use share_struct_solver;

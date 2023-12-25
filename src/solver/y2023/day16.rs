@@ -1,25 +1,29 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
+use crate::solver::{share_struct_parallel_solver, ProblemSolver};
 use crate::utils::grid::grid_2d_vec::Grid2dVec;
 use crate::utils::grid::{Grid2d, GridDirection};
 use anyhow::Context;
 use bitvec::bitvec;
 use derive_more::{Deref, Display, FromStr};
+use itertools::Itertools;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 use std::cell::RefCell;
 use std::cmp::max;
 use std::fmt::Debug;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::utils::graph::dfs;
 use thiserror::Error;
 
-share_struct_solver!(Day16, Day16Part1, Day16Part2);
+share_struct_parallel_solver!(Day16, Day16Part1, Day16Part2);
 
 pub struct Day16Part1 {
     grid: Grid2dVec<PositionKind>,
 }
 
 #[derive(Deref)]
-pub struct Day16Part2(Rc<Day16Part1>);
+pub struct Day16Part2(Arc<Day16Part1>);
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Display, Hash)]
 enum PositionKind {
@@ -169,12 +173,22 @@ impl ProblemSolver for Day16Part2 {
             .chain((0..self.grid.height()).flat_map(|y| {
                 [(0, y, GridDirection::East), (self.grid.width() - 1, y, GridDirection::West)]
             }))
+            .collect_vec()
+            .into_par_iter()
             .map(|(x, y, facing)| self.find_num_energized(x, y, facing))
-            .try_fold(None, |max_res, val| {
-                let val = val?;
-                Ok::<_, anyhow::Error>(max_res.map(|curr_max| max(curr_max, val)).or(Some(val)))
-            })?
-            .context("Cannot find max, is the grid empty?")
+            .try_fold(
+                || None,
+                |max_res, val| {
+                    let val = val?;
+                    Ok::<_, anyhow::Error>(max_res.map(|curr_max| max(curr_max, val)).or(Some(val)))
+                },
+            )
+            .try_reduce(
+                || None,
+                |left, right| Ok(left.and_then(|l| right.map(|r| max(l, r))).or(right)),
+            )
+            .transpose()
+            .context("Cannot find max, is the grid empty?")?
     }
 }
 
