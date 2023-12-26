@@ -47,8 +47,8 @@ pub fn dfs<S, N, E, I, A, AF>(
 where
     A: Clone,
     S: Eq + PartialEq + Hash + Debug,
-    N: Fn(&S) -> I,
-    E: Fn(&A, &S) -> bool,
+    N: FnMut(&S) -> I,
+    E: FnMut(&A, &S) -> bool,
     I: IntoIterator<Item = S>,
     AF: FnMut(&A, &S) -> A,
 {
@@ -58,15 +58,15 @@ where
 pub fn dfs_full<S, N, E, I, A, AF>(
     work_stack: &mut Vec<(A, S)>,
     visited: &mut HashSet<S>,
-    neighbor_fn: N,
-    end_state_fn: E,
+    mut neighbor_fn: N,
+    mut end_state_fn: E,
     mut acc_fn: AF,
 ) -> Option<(A, S)>
 where
     A: Clone,
     S: Eq + PartialEq + Hash + Debug,
-    N: Fn(&S) -> I,
-    E: Fn(&A, &S) -> bool,
+    N: FnMut(&S) -> I,
+    E: FnMut(&A, &S) -> bool,
     I: IntoIterator<Item = S>,
     AF: FnMut(&A, &S) -> A,
 {
@@ -102,8 +102,8 @@ where
     A: Clone,
     S: Eq + PartialEq + Hash + Debug,
     W: Ord + Debug,
-    N: Fn(&S, &W) -> I,
-    E: Fn(&A, &S, &W) -> bool,
+    N: FnMut(&S, &W) -> I,
+    E: FnMut(&A, &S, &W) -> bool,
     I: IntoIterator<Item = (S, W)>,
     AF: FnMut(&A, &S, &W) -> A,
 {
@@ -127,8 +127,8 @@ where
     A: Clone,
     S: Eq + PartialEq + Hash + Debug,
     W: Ord + Debug,
-    N: Fn(&S, &W) -> I,
-    E: Fn(&A, &S, &W) -> bool,
+    N: FnMut(&S, &W) -> I,
+    E: FnMut(&A, &S, &W) -> bool,
     I: IntoIterator<Item = (S, W)>,
     AF: FnMut(&A, &S, &W) -> A,
     SWI: IntoIterator<Item = (S, W)>,
@@ -149,16 +149,16 @@ where
 pub fn dijkstra_full<S, W, N, E, I, A, AF>(
     work_heap: &mut BinaryHeap<Reverse<StateWithWeight<A, S, W>>>,
     visited: &mut HashSet<S>,
-    neighbor_fn: N,
-    end_state_fn: E,
+    mut neighbor_fn: N,
+    mut end_state_fn: E,
     mut acc_fn: AF,
 ) -> Option<(A, S, W)>
 where
     A: Clone,
     S: Eq + PartialEq + Hash + Debug,
     W: Ord + Debug,
-    N: Fn(&S, &W) -> I,
-    E: Fn(&A, &S, &W) -> bool,
+    N: FnMut(&S, &W) -> I,
+    E: FnMut(&A, &S, &W) -> bool,
     I: IntoIterator<Item = (S, W)>,
     AF: FnMut(&A, &S, &W) -> A,
 {

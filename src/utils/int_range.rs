@@ -28,6 +28,10 @@ impl<T: Integer> IntRange<T> {
         Ok(Self { start, end })
     }
 
+    pub fn len(&self) -> T {
+        self.end - self.start + T::one()
+    }
+
     pub fn contains(&self, elem: &T) -> bool {
         *elem >= self.start && *elem <= self.end
     }
@@ -139,6 +143,18 @@ impl<T: Integer> From<&Range<T>> for IntRange<T> {
 
 impl<T: Integer> From<&RangeInclusive<T>> for IntRange<T> {
     fn from(value: &RangeInclusive<T>) -> Self {
+        return IntRange::new(*value.start(), *value.end()).unwrap();
+    }
+}
+
+impl<T: Integer> From<Range<T>> for IntRange<T> {
+    fn from(value: Range<T>) -> Self {
+        IntRange::new(value.start, value.end - T::one()).unwrap()
+    }
+}
+
+impl<T: Integer> From<RangeInclusive<T>> for IntRange<T> {
+    fn from(value: RangeInclusive<T>) -> Self {
         return IntRange::new(*value.start(), *value.end()).unwrap();
     }
 }
