@@ -17,12 +17,12 @@ share_struct_solver!(Day19, Day19Part1, Day19Part2);
 
 #[derive(Debug)]
 pub struct Day19Part1 {
-    accepted: Box<[[IntRange<usize>; 4]]>,
-    input: Box<[[usize; 4]]>,
+    accepted: Vec<[IntRange<usize>; 4]>,
+    input: Vec<[usize; 4]>,
 }
 
 #[derive(Deref, Debug)]
-struct RuleMap(IndexMap<Box<str>, Option<Box<[MappingRule]>>>);
+struct RuleMap(IndexMap<String, Option<Vec<MappingRule>>>);
 
 #[derive(Debug)]
 struct MappingRule {
@@ -60,7 +60,7 @@ impl FromStr for RuleMap {
 
 fn parse_one_map_from_str_and_name_idx_set(
     s: &str,
-    map: &mut IndexMap<Box<str>, Option<Box<[MappingRule]>>>,
+    map: &mut IndexMap<String, Option<Vec<MappingRule>>>,
 ) -> anyhow::Result<()> {
     let (rule_name, rule_val) =
         s.split_once('{').ok_or_else(|| anyhow!("Invalid input line: {:?}", s))?;
@@ -69,8 +69,8 @@ fn parse_one_map_from_str_and_name_idx_set(
         let rule_set = rule_val
             .split(',')
             .map(|rule| MappingRule::from_str_and_name_idx_set(rule, map))
-            .collect::<anyhow::Result<Box<[MappingRule]>>>()?;
-        let old_val = map.insert(rule_name.to_owned().into_boxed_str(), Some(rule_set));
+            .collect::<anyhow::Result<Vec<MappingRule>>>()?;
+        let old_val = map.insert(rule_name.to_owned(), Some(rule_set));
         if matches!(old_val, Some(Some(_))) {
             bail!("There are more than 1 rule for key: {:?}", rule_name)
         }
@@ -157,10 +157,10 @@ impl RangeConstraint {
 impl MappingRule {
     fn from_str_and_name_idx_set(
         s: &str,
-        name_idx_map: &mut IndexMap<Box<str>, Option<Box<[MappingRule]>>>,
+        name_idx_map: &mut IndexMap<String, Option<Vec<MappingRule>>>,
     ) -> anyhow::Result<MappingRule> {
         if let Some((left, right)) = s.split_once(':') {
-            let entry = name_idx_map.entry(right.to_owned().into_boxed_str());
+            let entry = name_idx_map.entry(right.to_owned());
             let target_rule_idx = entry.index();
             entry.or_insert(None);
             Ok(MappingRule {
@@ -168,7 +168,7 @@ impl MappingRule {
                 target_rule_idx,
             })
         } else {
-            let entry = name_idx_map.entry(s.to_owned().into_boxed_str());
+            let entry = name_idx_map.entry(s.to_owned());
             let target_rule_idx = entry.index();
             entry.or_insert(None);
             Ok(MappingRule { constraint: None, target_rule_idx })
@@ -204,7 +204,7 @@ fn from_category_to_index(category: &str) -> anyhow::Result<usize> {
         "m" => Ok(1),
         "a" => Ok(2),
         "s" => Ok(3),
-        _ => bail!(InvalidCategory(category.to_owned().into_boxed_str())),
+        _ => bail!(InvalidCategory(category.to_owned())),
     }
 }
 
@@ -214,7 +214,7 @@ pub struct Day19Part2(Rc<Day19Part1>);
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Category {0:?} is not valid")]
-    InvalidCategory(Box<str>),
+    InvalidCategory(String),
 }
 
 impl FromStr for Day19Part1 {
@@ -253,7 +253,7 @@ impl FromStr for Day19Part1 {
         let rating_part =
             part_iter.next().ok_or_else(|| anyhow!("Cannot get rating part in input: \n{}", s))?;
         let ratings = rating_part.lines().map(parse_rating_line).collect::<anyhow::Result<_>>()?;
-        Ok(Day19Part1 { accepted: accepted.into_boxed_slice(), input: ratings })
+        Ok(Day19Part1 { accepted, input: ratings })
     }
 }
 

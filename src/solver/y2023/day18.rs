@@ -8,10 +8,10 @@ use std::fmt::Debug;
 combine_solver!(Day18, Day18Part1, Day18Part2);
 
 #[derive(Deref, Debug)]
-pub struct Day18Part1(Box<[(GridDirection, isize)]>);
+pub struct Day18Part1(Vec<(GridDirection, isize)>);
 
 #[derive(Deref, Debug)]
-pub struct Day18Part2(Box<[(GridDirection, isize)]>);
+pub struct Day18Part2(Vec<(GridDirection, isize)>);
 
 impl FromStr for Day18Part1 {
     type Err = anyhow::Error;

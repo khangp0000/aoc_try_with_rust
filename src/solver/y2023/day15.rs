@@ -7,22 +7,22 @@ use std::fmt::Debug;
 combine_solver!(Day15, Day15Part1, Day15Part2);
 
 #[derive(Deref, Debug)]
-pub struct Day15Part1(Box<[Box<[u8]>]>);
+pub struct Day15Part1(Vec<String>);
 
 #[derive(Deref, Debug)]
 pub struct Day15Part2 {
-    map: LinkedHashMap<Box<[u8]>, u8>,
+    map: LinkedHashMap<String, u8>,
 }
 
-fn my_hash(bytes: &[u8]) -> u8 {
-    bytes.iter().fold(0_u8, move |hash, val| ((hash as u16 + *val as u16) * 17) as u8)
+fn my_hash(s: &str) -> u8 {
+    s.bytes().fold(0_u8, move |hash, val| ((hash as u16 + val as u16) * 17) as u8)
 }
 
 impl FromStr for Day15Part1 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
-        Ok(Day15Part1(s.trim().as_bytes().split(|b| *b == b',').map(Box::from).collect()))
+        Ok(Day15Part1(s.trim().split(',').map(str::to_owned).collect()))
     }
 }
 
@@ -39,23 +39,26 @@ impl FromStr for Day15Part2 {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut map = LinkedHashMap::new();
-        s.trim().as_bytes().split(|b| *b == b',').try_for_each(|b| {
+        s.trim().split(',').try_for_each(|b| {
             let len = b.len();
-            match b[len - 1] {
-                b'1'..=b'9' => {
-                    let val = b[len - 1] - b'0';
+            let mut char_rev_iter = b.chars().rev();
+            let last_char = char_rev_iter.next().unwrap();
+            match last_char {
+                '1'..='9' => {
+                    let val = last_char as u8 - b'0';
 
                     // insert will move existing to front, use entry to avoid that
-                    map.entry(Box::<[u8]>::from(&b[0..len - 2]))
+                    char_rev_iter.next().unwrap();
+                    map.entry(char_rev_iter.rev().collect())
                         .and_modify(|v| *v = val)
                         .or_insert(val);
                     Ok(())
                 }
-                b'-' => {
+                '-' => {
                     map.remove(&b[0..len - 1]);
                     Ok(())
                 }
-                c => bail!("Unknown ending character {:?}", c as char),
+                c => bail!("Unknown ending character {:?}", { c }),
             }
         })?;
         Ok(Day15Part2 { map })
@@ -107,7 +110,7 @@ mod tests {
 
     #[test]
     fn test_hash() -> anyhow::Result<()> {
-        assert_eq!(my_hash("HASH".as_bytes()), 52_u8);
+        assert_eq!(my_hash("HASH"), 52_u8);
         Ok(())
     }
 }
