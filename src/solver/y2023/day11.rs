@@ -50,28 +50,28 @@ impl ProblemSolver for Day11Part1 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        Ok(self.find_distance_with_expand_factor(&2))
+        Ok(self.find_distance_with_expand_factor(2))
     }
 }
 
 impl Day11Part1 {
-    fn find_distance_with_expand_factor(&self, expand_factor: &usize) -> usize {
+    fn find_distance_with_expand_factor(&self, expand_factor: usize) -> usize {
         return self
             .galaxies
             .iter()
             .tuple_combinations::<(_, _)>()
             .map(|((lx, ly), (rx, ry))| {
-                find_galaxy_1d_distance(lx, rx, expand_factor, &self.x_to_index)
-                    + find_galaxy_1d_distance(ly, ry, expand_factor, &self.y_to_index)
+                find_galaxy_1d_distance(*lx, *rx, expand_factor, &self.x_to_index)
+                    + find_galaxy_1d_distance(*ly, *ry, expand_factor, &self.y_to_index)
             })
             .sum::<usize>();
     }
 }
 
 pub fn find_galaxy_1d_distance(
-    d_1: &usize,
-    d_2: &usize,
-    expand_factor: &usize,
+    d_1: usize,
+    d_2: usize,
+    expand_factor: usize,
     d_to_index: &HashMap<usize, usize>,
 ) -> usize {
     let lo;
@@ -86,7 +86,7 @@ pub fn find_galaxy_1d_distance(
 
     let mut diff = hi - lo;
     if diff > 1 {
-        let index_diff = d_to_index[hi] - d_to_index[lo];
+        let index_diff = d_to_index[&hi] - d_to_index[&lo];
         diff = expand_factor * (diff - index_diff) + (index_diff);
     }
 
@@ -97,7 +97,7 @@ impl ProblemSolver for Day11Part2 {
     type SolutionType = usize;
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        Ok(self.find_distance_with_expand_factor(&1000000))
+        Ok(self.find_distance_with_expand_factor(1000000))
     }
 }
 
@@ -137,11 +137,11 @@ mod tests {
     #[test]
     fn test_expand() -> anyhow::Result<()> {
         assert_eq!(
-            Day11Part1::from_str(SAMPLE_INPUT_1)?.find_distance_with_expand_factor(&10),
+            Day11Part1::from_str(SAMPLE_INPUT_1)?.find_distance_with_expand_factor(10),
             1030
         );
         assert_eq!(
-            Day11Part1::from_str(SAMPLE_INPUT_1)?.find_distance_with_expand_factor(&100),
+            Day11Part1::from_str(SAMPLE_INPUT_1)?.find_distance_with_expand_factor(100),
             8410
         );
         Ok(())

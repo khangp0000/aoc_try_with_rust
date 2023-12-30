@@ -17,9 +17,6 @@ share_struct_solver!(Day14, Day14Part1, Day14Part2);
 #[derive(Display, Deref, Debug)]
 pub struct Day14Part1(WeirdGrid);
 
-#[derive(Debug)]
-pub struct Day14Grid {}
-
 #[derive(Clone, Debug)]
 pub struct WeirdGrid {
     width: u8,

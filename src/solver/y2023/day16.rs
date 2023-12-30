@@ -130,14 +130,14 @@ impl Day16Part1 {
             |current_state| {
                 let (x, y, current_face) = *current_state;
                 self.grid
-                    .get(&x, &y)
+                    .get(x, y)
                     .unwrap()
                     .clone()
                     .get_next_directions(current_face)
                     .iter()
                     .filter_map(move |next_face| {
                         self.grid
-                            .move_from_coordinate_to_direction(&x, &y, &1, next_face)
+                            .move_from_coordinate_to_direction(x, y, 1, *next_face)
                             .map(|(x, y)| (x, y, *next_face))
                     })
             },

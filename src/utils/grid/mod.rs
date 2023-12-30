@@ -1,4 +1,6 @@
+pub mod grid_2d_bitvec;
 pub mod grid_2d_vec;
+
 use derive_more::Display;
 use enumset::EnumSetType;
 use std::ops::Index;
@@ -12,103 +14,83 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
         self.width() * self.height()
     }
 
-    fn get(&self, x: &usize, y: &usize) -> Option<&T> {
+    fn get(&self, x: usize, y: usize) -> Option<&T> {
         if self.contains(x, y) {
-            return Some(self.index((*x, *y)));
+            return Some(self.index((x, y)));
         }
         None
     }
 
-    fn contains(&self, &x: &usize, &y: &usize) -> bool {
+    fn contains(&self, x: usize, y: usize) -> bool {
         x < self.width() && y < self.height()
     }
 
-    fn north_coordinate_from(
-        &self,
-        &x: &usize,
-        &y: &usize,
-        &step: &usize,
-    ) -> Option<(usize, usize)> {
-        y.checked_sub(step).filter(|y| self.contains(&x, y)).map(|y| (x, y))
+    fn north_coordinate_from(&self, x: usize, y: usize, step: usize) -> Option<(usize, usize)> {
+        y.checked_sub(step).filter(|y| self.contains(x, *y)).map(|y| (x, y))
     }
 
-    fn south_coordinate_from(
-        &self,
-        &x: &usize,
-        &y: &usize,
-        &step: &usize,
-    ) -> Option<(usize, usize)> {
-        y.checked_add(step).filter(|y| self.contains(&x, y)).map(|y| (x, y))
+    fn south_coordinate_from(&self, x: usize, y: usize, step: usize) -> Option<(usize, usize)> {
+        y.checked_add(step).filter(|y| self.contains(x, *y)).map(|y| (x, y))
     }
 
-    fn west_coordinate_from(
-        &self,
-        &x: &usize,
-        &y: &usize,
-        &step: &usize,
-    ) -> Option<(usize, usize)> {
-        x.checked_sub(step).filter(|x| self.contains(x, &y)).map(|x| (x, y))
+    fn west_coordinate_from(&self, x: usize, y: usize, step: usize) -> Option<(usize, usize)> {
+        x.checked_sub(step).filter(|x| self.contains(*x, y)).map(|x| (x, y))
     }
 
-    fn east_coordinate_from(
-        &self,
-        &x: &usize,
-        &y: &usize,
-        &step: &usize,
-    ) -> Option<(usize, usize)> {
-        x.checked_add(step).filter(|x| self.contains(x, &y)).map(|x| (x, y))
+    fn east_coordinate_from(&self, x: usize, y: usize, step: usize) -> Option<(usize, usize)> {
+        x.checked_add(step).filter(|x| self.contains(*x, y)).map(|x| (x, y))
     }
 
     fn north_west_coordinate_from(
         &self,
-        &x: &usize,
-        &y: &usize,
-        &step: &usize,
+        x: usize,
+        y: usize,
+        step: usize,
     ) -> Option<(usize, usize)> {
         x.checked_sub(step)
             .and_then(|x| y.checked_sub(step).map(|y| (x, y)))
-            .filter(|(x, y)| self.contains(x, y))
+            .filter(|(x, y)| self.contains(*x, *y))
     }
 
     fn north_east_coordinate_from(
         &self,
-        &x: &usize,
-        &y: &usize,
-        &step: &usize,
+        x: usize,
+        y: usize,
+        step: usize,
     ) -> Option<(usize, usize)> {
         x.checked_add(step)
             .and_then(|x| y.checked_sub(step).map(|y| (x, y)))
-            .filter(|(x, y)| self.contains(x, y))
+            .filter(|(x, y)| self.contains(*x, *y))
     }
 
     fn south_west_coordinate_from(
         &self,
-        &x: &usize,
-        &y: &usize,
-        &step: &usize,
+        x: usize,
+        y: usize,
+        step: usize,
     ) -> Option<(usize, usize)> {
         x.checked_sub(step)
             .and_then(|x| y.checked_add(step).map(|y| (x, y)))
-            .filter(|(x, y)| self.contains(x, y))
+            .filter(|(x, y)| self.contains(*x, *y))
     }
 
     fn south_east_coordinate_from(
         &self,
-        &x: &usize,
-        &y: &usize,
-        &step: &usize,
+        x: usize,
+        y: usize,
+        step: usize,
     ) -> Option<(usize, usize)> {
         x.checked_add(step)
             .and_then(|x| y.checked_add(step).map(|y| (x, y)))
-            .filter(|(x, y)| self.contains(x, y))
+            .filter(|(x, y)| self.contains(*x, *y))
     }
 
     fn move_from_coordinate_to_direction(
         &self,
-        x: &usize,
-        y: &usize,
-        step: &usize,
-        direction: &GridDirection,
+        x: usize,
+        y: usize,
+        step: usize,
+        direction: GridDirection,
     ) -> Option<(usize, usize)> {
         match direction {
             GridDirection::North => self.north_coordinate_from(x, y, step),

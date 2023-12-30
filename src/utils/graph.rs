@@ -1,5 +1,5 @@
 use std::cmp::{Ordering, Reverse};
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::{BinaryHeap, HashSet, VecDeque};
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::iter;
@@ -81,6 +81,64 @@ where
                 .into_iter()
                 .map(|next_state| (acc.clone(), next_state))
                 .for_each(|item| work_stack.push(item));
+
+            visited.insert(current_state);
+        }
+    }
+
+    None
+}
+
+pub fn bfs<S, N, E, I, A, AF>(
+    start: S,
+    neighbor_fn: N,
+    end_state_fn: E,
+    acc_init: A,
+    acc_fn: AF,
+) -> Option<(A, S)>
+where
+    A: Clone,
+    S: Eq + PartialEq + Hash + Debug,
+    N: FnMut(&S) -> I,
+    E: FnMut(&A, &S) -> bool,
+    I: IntoIterator<Item = S>,
+    AF: FnMut(&A, &S) -> A,
+{
+    bfs_full(
+        &mut VecDeque::from([(acc_init, start)]),
+        &mut HashSet::new(),
+        neighbor_fn,
+        end_state_fn,
+        acc_fn,
+    )
+}
+
+pub fn bfs_full<S, N, E, I, A, AF>(
+    work_queue: &mut VecDeque<(A, S)>,
+    visited: &mut HashSet<S>,
+    mut neighbor_fn: N,
+    mut end_state_fn: E,
+    mut acc_fn: AF,
+) -> Option<(A, S)>
+where
+    A: Clone,
+    S: Eq + PartialEq + Hash + Debug,
+    N: FnMut(&S) -> I,
+    E: FnMut(&A, &S) -> bool,
+    I: IntoIterator<Item = S>,
+    AF: FnMut(&A, &S) -> A,
+{
+    while let Some((acc, current_state)) = work_queue.pop_front() {
+        if !visited.contains(&current_state) {
+            let acc = acc_fn(&acc, &current_state);
+
+            if end_state_fn(&acc, &current_state) {
+                return Some((acc, current_state));
+            }
+            neighbor_fn(&current_state)
+                .into_iter()
+                .map(|next_state| (acc.clone(), next_state))
+                .for_each(|item| work_queue.push_back(item));
 
             visited.insert(current_state);
         }

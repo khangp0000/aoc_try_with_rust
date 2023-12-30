@@ -257,15 +257,10 @@ impl Day10Part1 {
                         let prev_y = *prev_y;
                         let prev_state_face = *prev_state_face;
                         self.grid
-                            .move_from_coordinate_to_direction(
-                                &prev_x,
-                                &prev_y,
-                                &1,
-                                &prev_state_face,
-                            )
+                            .move_from_coordinate_to_direction(prev_x, prev_y, 1, prev_state_face)
                             .into_iter()
                             .flat_map(move |(x, y)| {
-                                self.grid.get(&x, &y).into_iter().flat_map(move |p| {
+                                self.grid.get(x, y).into_iter().flat_map(move |p| {
                                     let iter: Box<
                                         dyn Iterator<Item = ((usize, usize), GridDirection)>,
                                     > = match p {
@@ -293,7 +288,7 @@ impl Day10Part1 {
                     },
                     |_, ((x, y), facing)| {
                         Some(self.start)
-                            == self.grid.move_from_coordinate_to_direction(x, y, &1, facing)
+                            == self.grid.move_from_coordinate_to_direction(*x, *y, 1, *facing)
                     },
                     None,
                     |path, next_coordinate_and_facing| {

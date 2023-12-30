@@ -41,7 +41,7 @@ impl Day17Part1 {
     fn get_neighbor(
         &self,
         state: &(usize, usize, GridDirection, usize),
-        weight: &usize,
+        weight: usize,
         minimum_block_move_after_turn: usize,
         max_block_straight_after_turn: usize,
     ) -> Vec<((usize, usize, GridDirection, usize), usize)> {
@@ -50,20 +50,20 @@ impl Day17Part1 {
         let cw_90 = face.clock_wise_90();
         let ccw_90 = cw_90.reverse();
         if let Some((moved_x, moved_y)) = self.grid.move_from_coordinate_to_direction(
-            x,
-            y,
-            &minimum_block_move_after_turn,
-            &cw_90,
+            *x,
+            *y,
+            minimum_block_move_after_turn,
+            cw_90,
         ) {
             let mut curr_x = *x;
             let mut curr_y = *y;
             let weight =
-                (0_usize..minimum_block_move_after_turn).fold(*weight, |mut weight, _step| {
+                (0_usize..minimum_block_move_after_turn).fold(weight, |mut weight, _step| {
                     (curr_x, curr_y) = self
                         .grid
-                        .move_from_coordinate_to_direction(&curr_x, &curr_y, &1, &cw_90)
+                        .move_from_coordinate_to_direction(curr_x, curr_y, 1, cw_90)
                         .unwrap();
-                    weight += *self.grid.get(&curr_x, &curr_y).unwrap() as usize;
+                    weight += *self.grid.get(curr_x, curr_y).unwrap() as usize;
                     weight
                 });
             res.push((
@@ -78,20 +78,20 @@ impl Day17Part1 {
         }
 
         if let Some((moved_x, moved_y)) = self.grid.move_from_coordinate_to_direction(
-            x,
-            y,
-            &minimum_block_move_after_turn,
-            &ccw_90,
+            *x,
+            *y,
+            minimum_block_move_after_turn,
+            ccw_90,
         ) {
             let mut curr_x = *x;
             let mut curr_y = *y;
             let weight =
-                (0_usize..minimum_block_move_after_turn).fold(*weight, |mut weight, _step| {
+                (0_usize..minimum_block_move_after_turn).fold(weight, |mut weight, _step| {
                     (curr_x, curr_y) = self
                         .grid
-                        .move_from_coordinate_to_direction(&curr_x, &curr_y, &1, &ccw_90)
+                        .move_from_coordinate_to_direction(curr_x, curr_y, 1, ccw_90)
                         .unwrap();
-                    weight += *self.grid.get(&curr_x, &curr_y).unwrap() as usize;
+                    weight += *self.grid.get(curr_x, curr_y).unwrap() as usize;
                     weight
                 });
             res.push((
@@ -106,10 +106,10 @@ impl Day17Part1 {
         }
 
         if *can_go_straight != 0 {
-            if let Some((x, y)) = self.grid.move_from_coordinate_to_direction(x, y, &1, face) {
+            if let Some((x, y)) = self.grid.move_from_coordinate_to_direction(*x, *y, 1, *face) {
                 res.push((
                     (x, y, *face, can_go_straight - 1),
-                    *self.grid.get(&x, &y).unwrap() as usize + weight,
+                    *self.grid.get(x, y).unwrap() as usize + weight,
                 ))
             }
         }
@@ -128,7 +128,7 @@ impl ProblemSolver for Day17Part1 {
         ];
         if let Some((_, _, weight)) = dijkstra_starts_iter(
             starts,
-            |state, weight| self.get_neighbor(state, weight, 1, 3),
+            |state, weight| self.get_neighbor(state, *weight, 1, 3),
             |_, (x, y, _, _), _| *x == self.grid.width() - 1 && *y == self.grid.height() - 1,
             (),
             |_, _, _| (),
@@ -150,7 +150,7 @@ impl ProblemSolver for Day17Part2 {
         ];
         if let Some((_, _, weight)) = dijkstra_starts_iter(
             starts,
-            |state, weight| self.get_neighbor(state, weight, 4, 10),
+            |state, weight| self.get_neighbor(state, *weight, 4, 10),
             |_, (x, y, _, _), _| *x == self.grid.width() - 1 && *y == self.grid.height() - 1,
             (),
             |_, _, _| (),

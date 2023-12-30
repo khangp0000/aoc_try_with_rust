@@ -447,7 +447,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_solve_2() -> anyhow::Result<()> {
         assert_eq!(*Day20::from_str(SAMPLE_INPUT_3)?.solve_2()?.deref(), 4);
         Ok(())
     }
