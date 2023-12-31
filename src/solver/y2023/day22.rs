@@ -213,6 +213,7 @@ impl ProblemSolver for Day22Part2 {
 
     fn solve(&self) -> anyhow::Result<Self::SolutionType> {
         let len = self.brick_supported_by.len();
+        // destroyed_list[i] is set of brick it will also destroy if brick[i] is destroyed
         let destroyed_list = (0..len)
             .map(|i| {
                 let mut map = BitSet::default();
@@ -221,36 +222,30 @@ impl ProblemSolver for Day22Part2 {
             })
             .collect_vec();
 
+        // affected_list[i] is set of all dependent brick of brick[i], meaning they MAY be
+        // destroyed if brick[i] is destroyed.
         let mut affected_list =
             self.brick_supporting.iter().cloned().map(RefCell::new).collect_vec();
-
         self.brick_supporting.iter().enumerate().rev().for_each(|(brick_id, supporting)| {
             let affected = &mut affected_list[brick_id].borrow_mut();
             supporting.iter().for_each(|i| affected.union_with(&affected_list[i].borrow()))
         });
 
-        destroyed_list.iter().enumerate().rev().for_each(|(_id, destroyed)| {
-            let affected = affected_list.pop().unwrap().into_inner();
-
-            let mut initial_len = destroyed.borrow().len();
-            loop {
-                affected
-                    .iter()
-                    .filter(|affected_id| {
-                        self.brick_supported_by[*affected_id].is_subset(&*destroyed.borrow())
-                    })
-                    .for_each(|destroy_id| {
-                        let mut destroy_mut = destroyed.borrow_mut();
-                        destroy_mut.extend(destroyed_list[destroy_id].borrow().iter())
-                    });
-                let destroyed_borrow = destroyed.borrow();
-                affected.difference(&destroyed_borrow);
-                let new_len = destroyed_borrow.len();
-                if initial_len == new_len {
-                    break;
-                }
-                initial_len = new_len;
-            }
+        destroyed_list.iter().rev().for_each(|destroyed| {
+            // Since the supporter of a brick id always have smaller id, we can iterate
+            // through the affected list once in increasing order of brick id, adding destroy[id]
+            // if all the brick supporting that brick is in destroyed. And since affected_list[i]
+            // always >= i, we create destroy in reverse order so we can get the previously
+            // computed destroy[id].
+            affected_list.pop().unwrap().into_inner()
+                .iter()
+                .filter(|affected_id| {
+                    self.brick_supported_by[*affected_id].is_subset(&*destroyed.borrow())
+                })
+                .for_each(|destroy_id| {
+                    let mut destroy_mut = destroyed.borrow_mut();
+                    destroy_mut.union_with(&*destroyed_list[destroy_id].borrow())
+                });
         });
 
         Ok(destroyed_list.iter().map(|destroyed| destroyed.borrow().len() - 1).sum())
