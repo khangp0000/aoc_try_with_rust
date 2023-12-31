@@ -95,7 +95,7 @@ fn get_next_set<
                     .map(|b| if *b { 1_i32 } else { -1_i32 })?,
             ))
         })
-        .try_fold((Vec::new(), 0), |(mut vec, mut acc), r| {
+        .try_fold((Vec::default(), 0), |(mut vec, mut acc), r| {
             let (val, iter, one_value) = r?;
             vec.push((val, one_value, iter));
             acc += one_value;

@@ -41,7 +41,7 @@ impl<T> Grid2dVec<T> {
     pub fn try_new<I: IntoIterator<Item = Result<T>>, II: IntoIterator<Item = I>>(
         into_iter: II,
     ) -> Result<Self> {
-        let predict_width = OnceCell::new();
+        let predict_width = OnceCell::default();
 
         let grid = into_iter
             .into_iter()

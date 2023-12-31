@@ -110,7 +110,7 @@ impl Day3 {
                     right = line.len();
                 }
 
-                let value = OnceCell::new();
+                let value = OnceCell::default();
                 let value_init_f = || parse_usize_str_from_bytes(&line[left..right]).unwrap();
 
                 let c_left = if left == 0_usize { 0_usize } else { left - 1 };

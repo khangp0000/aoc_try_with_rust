@@ -113,7 +113,7 @@ impl FromStr for Day10Part1 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
-        let starting_position = OnceCell::new();
+        let starting_position = OnceCell::default();
         let grid = Grid2dVec::<PositionKind>::try_new(s.lines().map(str::bytes).enumerate().map(
             |(y, iter)| {
                 let starting_position = &starting_position;
@@ -143,7 +143,7 @@ impl FromStr for Day10Part1 {
         Ok(Day10Part1 {
             grid,
             start: starting_position.into_inner().context("Cannot find starting position")?,
-            pipe_path: OnceCell::new(),
+            pipe_path: OnceCell::default(),
         })
     }
 }

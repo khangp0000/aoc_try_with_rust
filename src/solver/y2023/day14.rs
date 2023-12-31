@@ -32,7 +32,7 @@ impl FromStr for WeirdGrid {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut cube_y_inc_x_inc = Vec::new();
+        let mut cube_y_inc_x_inc = Vec::default();
         let (rounds, width, height) = s.lines().map(|line| line.bytes()).enumerate().try_fold(
             (BitVec::<usize, Lsb0>::with_capacity(s.len()), None, 0_u8),
             |(mut bitvec, mut len, height), (y, line_bytes)| {
@@ -91,9 +91,9 @@ impl WeirdGrid {
             width,
             height,
             cube_y_inc_x_inc: Rc::new(cube_y_inc_x_inc),
-            cube_y_dec_x_dec: Rc::new(OnceCell::new()),
-            cube_x_inc_y_inc: Rc::new(OnceCell::new()),
-            cube_x_dec_y_dec: Rc::new(OnceCell::new()),
+            cube_y_dec_x_dec: Rc::new(OnceCell::default()),
+            cube_x_inc_y_inc: Rc::new(OnceCell::default()),
+            cube_x_dec_y_dec: Rc::new(OnceCell::default()),
             rounds: Rc::new(rounds),
         }
     }

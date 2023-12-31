@@ -45,7 +45,7 @@ impl<S: BitStore, O: BitOrder> Grid2dBitVec<S, O> {
     pub fn try_new<I: IntoIterator<Item = anyhow::Result<bool>>, II: IntoIterator<Item = I>>(
         into_iter: II,
     ) -> anyhow::Result<Self> {
-        let predict_width = OnceCell::new();
+        let predict_width = OnceCell::default();
 
         let grid = into_iter
             .into_iter()
@@ -69,7 +69,7 @@ impl<S: BitStore, O: BitOrder> Grid2dBitVec<S, O> {
                 l.append(&mut r);
                 l
             })
-            .unwrap_or_else(|| BitVec::new());
+            .unwrap_or_else(BitVec::default);
 
         Ok(Self { grid, height, width })
     }

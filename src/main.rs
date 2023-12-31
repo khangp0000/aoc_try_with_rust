@@ -39,7 +39,7 @@ struct Args {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-    rayon::ThreadPoolBuilder::new()
+    rayon::ThreadPoolBuilder::default()
         .num_threads(args.threads.unwrap_or_else(num_cpus::get))
         .build_global()
         .unwrap();

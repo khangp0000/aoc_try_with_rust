@@ -1,20 +1,17 @@
 use crate::solver::{share_struct_solver, ProblemSolver};
+use crate::utils::graph::bfs;
+use crate::utils::grid::grid_2d_bitvec::Grid2dBitVec;
+use crate::utils::grid::{Grid2d, GridDirection};
 use crate::utils::WarningResult;
 use anyhow::{anyhow, bail, ensure, Context};
 use bitvec::bitvec;
 use bitvec::vec::BitVec;
 use derive_more::{Deref, FromStr};
 use derive_new::new;
-use std::cell::OnceCell;
-
-use num::Integer;
-
-use std::fmt::{Debug, Display, Formatter};
-
-use crate::utils::graph::bfs;
-use crate::utils::grid::grid_2d_bitvec::Grid2dBitVec;
-use crate::utils::grid::{Grid2d, GridDirection};
 use itertools::Itertools;
+use num::Integer;
+use std::cell::OnceCell;
+use std::fmt::{Debug, Display, Formatter};
 use std::rc::Rc;
 
 share_struct_solver!(Day21, Day21Part1, Day21Part2);
@@ -44,7 +41,7 @@ impl FromStr for Day21Part1 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
-        let start = OnceCell::new();
+        let start = OnceCell::default();
         let start_ref = &start;
         let iter = s.lines().enumerate().map(|(y, line)| {
             line.chars().enumerate().map(|(x, c)| (x, parse_position(c))).map(move |(x, res)| {

@@ -52,7 +52,7 @@ impl FromStr for RuleMap {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut map = IndexMap::new();
+        let mut map = IndexMap::default();
         s.lines().try_for_each(|line| parse_one_map_from_str_and_name_idx_set(line, &mut map))?;
         Ok(RuleMap(map))
     }
@@ -83,7 +83,7 @@ fn parse_one_map_from_str_and_name_idx_set(
 
 impl State {
     fn apply_rule(&self, rules: &[MappingRule]) -> anyhow::Result<Vec<State>> {
-        let mut next_states = Vec::new();
+        let mut next_states = Vec::default();
         let execute_result = rules.iter().try_fold(Cow::Borrowed(&self.xmas), |mut state, rule| {
             if let Some(constraint) = &rule.constraint {
                 let category = constraint.category;
@@ -231,18 +231,18 @@ impl FromStr for Day19Part1 {
             evaluate_rule_idx: rule_map.get_index_of("in").unwrap(),
         };
         let accept_rule_idx = rule_map.get_index_of("A").unwrap();
-        let mut accepted = Vec::new();
+        let mut accepted = Vec::default();
         dfs(
             start,
             |state| {
                 if state.evaluate_rule_idx == accept_rule_idx {
                     accepted.push(state.xmas);
-                    Vec::new()
+                    Vec::default()
                 } else if let (_, Some(rule)) = rule_map.get_index(state.evaluate_rule_idx).unwrap()
                 {
                     state.apply_rule(rule).unwrap()
                 } else {
-                    Vec::new()
+                    Vec::default()
                 }
             },
             |_, _| false,

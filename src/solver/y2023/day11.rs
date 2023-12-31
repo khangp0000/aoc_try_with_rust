@@ -29,7 +29,7 @@ impl FromStr for Day11Part1 {
             })
             .collect::<Vec<_>>();
         let (sorted_x, y_to_index) = galaxies.iter().fold(
-            (BTreeSet::new(), HashMap::new()),
+            (BTreeSet::default(), HashMap::new()),
             |(mut sorting_x, mut y_to_index), (x, y)| {
                 sorting_x.insert(*x);
                 let current_y_to_index_len = y_to_index.len();

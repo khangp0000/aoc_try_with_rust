@@ -45,7 +45,7 @@ impl<T: Integer> FromStr for Day5<T> {
                 let mut map_data = lines
                     .map(|line| {
                         line.split_whitespace().map(<T>::from_str).try_fold(
-                            Vec::new(),
+                            Vec::default(),
                             |mut l, r| {
                                 if l.len() == 3 {
                                     bail!("Too many input in line {:?}", line);
@@ -145,7 +145,7 @@ where
     MI: IntoIterator<Item = &'a (IntRange<T>, IntRange<T>)>,
 {
     let (mut final_res, mut remainder) = range_to_range_maps.into_iter().fold(
-        (Vec::new(), Cow::from(sources)),
+        (Vec::default(), Cow::from(sources)),
         |(mut final_res, source), tuple_ref| {
             let (source_range, dest_range) = *tuple_ref;
             let source_ref = source.as_ref();
@@ -173,7 +173,7 @@ where
         .into_iter()
         .map(|source| (source.intersect(source_range), source.sub(source_range)))
         .fold(
-            (Vec::new(), Vec::new()),
+            (Vec::default(), Vec::default()),
             |(mut res, mut remainder), (intersect_result, mut sub_result)| {
                 if let Some(mut intersection) = intersect_result {
                     intersection -= source_range.start;

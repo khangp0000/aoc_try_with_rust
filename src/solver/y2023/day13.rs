@@ -43,7 +43,7 @@ impl FromStr for Day13Part1 {
                         })
                     })
                     .try_fold(
-                        (Vec::new(), None, None),
+                        (Vec::default(), None, None),
                         |(mut horizontals, mut verticals, mut len), mut current_line| {
                             let current_len = current_line.len();
                             if current_len != *len.get_or_insert(current_len) {
@@ -54,7 +54,7 @@ impl FromStr for Day13Part1 {
                             }
                             let mut verticals_mut_iter = verticals
                                 .get_or_insert_with(|| {
-                                    vec![BitVec::<u32, Msb0>::new(); current_len]
+                                    vec![BitVec::<u32, Msb0>::default(); current_len]
                                 })
                                 .iter_mut();
                             let horizontal_val = current_line

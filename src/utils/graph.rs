@@ -52,7 +52,13 @@ where
     I: IntoIterator<Item = S>,
     AF: FnMut(&A, &S) -> A,
 {
-    dfs_full(&mut vec![(acc_init, start)], &mut HashSet::new(), neighbor_fn, end_state_fn, acc_fn)
+    dfs_full(
+        &mut vec![(acc_init, start)],
+        &mut HashSet::default(),
+        neighbor_fn,
+        end_state_fn,
+        acc_fn,
+    )
 }
 
 pub fn dfs_full<S, N, E, I, A, AF>(
@@ -106,7 +112,7 @@ where
 {
     bfs_full(
         &mut VecDeque::from([(acc_init, start)]),
-        &mut HashSet::new(),
+        &mut HashSet::default(),
         neighbor_fn,
         end_state_fn,
         acc_fn,
@@ -201,7 +207,7 @@ where
             })
         })
         .collect::<BinaryHeap<_>>();
-    dijkstra_full(&mut work_heap, &mut HashSet::new(), neighbor_fn, end_state_fn, acc_fn)
+    dijkstra_full(&mut work_heap, &mut HashSet::default(), neighbor_fn, end_state_fn, acc_fn)
 }
 
 pub fn dijkstra_full<S, W, N, E, I, A, AF>(

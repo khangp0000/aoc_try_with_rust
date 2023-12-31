@@ -28,6 +28,10 @@ impl<T: Integer> IntRange<T> {
         Ok(Self { start, end })
     }
 
+    pub fn new_unknown_order(start: T, end: T) -> Self {
+        if end < start { Self { end, start } } else { Self { start, end } }
+    }
+
     pub fn len(&self) -> T {
         self.end - self.start + T::one()
     }
@@ -47,7 +51,7 @@ impl<T: Integer> IntRange<T> {
     }
 
     pub fn sub(&self, other: &Self) -> Vec<Self> {
-        let mut res = Vec::new();
+        let mut res = Vec::default();
         if let Some(intersection) = self.intersect(other) {
             if intersection.start != self.start {
                 res.push(Self::new(self.start, intersection.start - T::one()).unwrap());

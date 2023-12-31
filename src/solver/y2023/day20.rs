@@ -207,7 +207,7 @@ impl FromStr for Day20Part1 {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
-        let mut module_map = IndexMap::new();
+        let mut module_map = IndexMap::default();
         s.lines().try_for_each(|line| {
             let (module_name_full, target_modules) =
                 line.split_once(" -> ").ok_or_else(|| anyhow!("Invalid input string: {line:?}"))?;
