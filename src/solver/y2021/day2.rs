@@ -18,7 +18,7 @@ pub enum Movement {
 impl FromStr for Movement {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let (movement, value) = s
             .split_once(' ')
             .with_context(|| format!("Failed to split whitespace for string: {}", s))?;
@@ -35,7 +35,7 @@ impl FromStr for Movement {
 impl FromStr for Day2 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         return Ok(Day2 {
             movements: s.lines().map(Movement::from_str).map(Result::unwrap).collect(),
         });

@@ -11,7 +11,7 @@ pub struct Day1 {
 impl FromStr for Day1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         Ok(Day1 {
             report: s
                 .lines()

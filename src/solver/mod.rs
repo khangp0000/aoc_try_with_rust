@@ -108,7 +108,7 @@ macro_rules! share_struct_solver {
         impl std::str::FromStr for $solver2 {
             type Err = anyhow::Error;
 
-            fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+            fn from_str(s: &str) -> anyhow::Result<Self> {
                 Ok($solver2(std::rc::Rc::new($solver1::from_str(s)?)))
             }
         }
@@ -144,7 +144,7 @@ macro_rules! share_struct_parallel_solver {
         impl std::str::FromStr for $solver2 {
             type Err = anyhow::Error;
 
-            fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+            fn from_str(s: &str) -> anyhow::Result<Self> {
                 Ok($solver2(std::sync::Arc::new($solver1::from_str(s)?)))
             }
         }

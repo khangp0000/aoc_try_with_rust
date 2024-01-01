@@ -13,7 +13,7 @@ pub struct Day4 {
 impl FromStr for Day4 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         return Ok(Day4 {
             cards: s
                 .lines()
