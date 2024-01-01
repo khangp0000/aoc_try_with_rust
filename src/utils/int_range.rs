@@ -1,10 +1,12 @@
-use crate::utils::int_trait::Integer;
-use anyhow::Result;
-use derive_more::Display;
 use std::cmp::max;
 use std::fmt::Debug;
 use std::ops::{Add, AddAssign, Range, RangeInclusive, Sub, SubAssign};
+
+use anyhow::Result;
+use derive_more::Display;
 use thiserror::Error;
+
+use crate::utils::int_trait::Integer;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Display, Debug, Ord, PartialOrd)]
 #[display("[{}..{}]", start, end)]

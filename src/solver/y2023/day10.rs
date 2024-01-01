@@ -1,16 +1,19 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
-use crate::utils::graph::dfs;
-use crate::utils::grid::grid_2d_vec::Grid2dVec;
-use crate::utils::grid::{Grid2d, GridDirection};
-use anyhow::{anyhow, bail, Context};
-use derive_more::{Deref, DerefMut, Display, FromStr};
-use enumset::{enum_set, EnumSet};
 use std::cell::OnceCell;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::rc::{Rc, Weak};
 use std::sync::Arc;
+
+use anyhow::{anyhow, bail, Context, Result};
+use derive_more::{Deref, DerefMut, Display, FromStr};
+use dyn_iter::{DynIter, IntoDynIterator};
+use enumset::{enum_set, EnumSet};
 use thiserror::Error;
+
+use crate::solver::{share_struct_solver, ProblemSolver};
+use crate::utils::graph::dfs;
+use crate::utils::grid::grid_2d_vec::Grid2dVec;
+use crate::utils::grid::{Grid2d, GridDirection};
 
 share_struct_solver!(Day10, Day10Part1, Day10Part2);
 
@@ -47,6 +50,7 @@ enum PipeKind {
     LSouthWest,
     LSouthEast,
 }
+
 impl Deref for PipeKind {
     type Target = Pipe;
 
@@ -87,14 +91,14 @@ enum PositionKind {
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Cannot convert {:?} to PositionKind", <char>::from(*.0))]
+    #[error("Cannot convert {:?} to PositionKind", < char >::from(*.0))]
     InvalidPositionChar(u8),
 }
 
 impl TryFrom<u8> for PositionKind {
     type Error = anyhow::Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u8) -> Result<Self> {
         match value {
             b'.' => Ok(PositionKind::Ground),
             b'S' => Ok(PositionKind::Start),
@@ -112,7 +116,7 @@ impl TryFrom<u8> for PositionKind {
 impl FromStr for Day10Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let starting_position = OnceCell::default();
         let grid = Grid2dVec::<PositionKind>::try_new(s.lines().map(str::bytes).enumerate().map(
             |(y, iter)| {
@@ -151,7 +155,7 @@ impl FromStr for Day10Part1 {
 impl ProblemSolver for Day10Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         let res = self.get_pipe_path();
         res.clone().map(|path| path.len() / 2).map_err(|e| anyhow!(e))
     }
@@ -178,6 +182,10 @@ impl ChainPathRc {
             start: me.clone(),
             len: 1,
         }))
+    }
+
+    fn iter(&self) -> ChainPathIter {
+        self.clone().into_iter()
     }
 }
 
@@ -243,11 +251,11 @@ impl Iterator for ChainPathIter {
 }
 
 impl Day10Part1 {
-    fn get_pipe_path(&self) -> Result<ChainPathRc, Arc<anyhow::Error>> {
-        self.pipe_path.get_or_init(|| self.find_pipe_loop().map_err(Arc::new)).clone()
+    fn get_pipe_path(&self) -> &Result<ChainPathRc, Arc<anyhow::Error>> {
+        self.pipe_path.get_or_init(|| self.find_pipe_loop().map_err(Arc::new))
     }
 
-    fn find_pipe_loop(&self) -> anyhow::Result<ChainPathRc> {
+    fn find_pipe_loop(&self) -> Result<ChainPathRc> {
         let result =
             CARDINAL.iter().map(|direction| (self.start, *direction)).find_map(|start_state| {
                 dfs(
@@ -261,25 +269,20 @@ impl Day10Part1 {
                             .into_iter()
                             .flat_map(move |(x, y)| {
                                 self.grid.get(x, y).into_iter().flat_map(move |p| {
-                                    let iter: Box<
-                                        dyn Iterator<Item = ((usize, usize), GridDirection)>,
-                                    > = match p {
+                                    let iter: DynIter<((usize, usize), GridDirection)> = match p {
                                         PositionKind::Start => {
-                                            Box::new(std::iter::once(start_state))
+                                            std::iter::once(start_state).into_dyn_iter()
                                         }
-                                        PositionKind::Ground => Box::new(std::iter::empty()),
-                                        PositionKind::Pipe(pipe_kind) => Box::new(
-                                            pipe_kind
-                                                .can_enter_from(prev_state_face.reverse())
-                                                .into_iter()
-                                                .flat_map(move |out_directions| {
-                                                    out_directions.iter().map(
-                                                        move |out_direction| {
-                                                            ((x, y), out_direction)
-                                                        },
-                                                    )
-                                                }),
-                                        ),
+                                        PositionKind::Ground => std::iter::empty().into_dyn_iter(),
+                                        PositionKind::Pipe(pipe_kind) => pipe_kind
+                                            .can_enter_from(prev_state_face.reverse())
+                                            .into_iter()
+                                            .flat_map(move |out_directions| {
+                                                out_directions.iter().map(move |out_direction| {
+                                                    ((x, y), out_direction)
+                                                })
+                                            })
+                                            .into_dyn_iter(),
                                     };
 
                                     iter
@@ -309,8 +312,8 @@ impl Day10Part1 {
 impl ProblemSolver for Day10Part2 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        let chain_path = self.get_pipe_path().map_err(|e| anyhow!(e))?;
+    fn solve(&self) -> Result<Self::SolutionType> {
+        let chain_path = self.get_pipe_path().as_ref().map_err(|e| anyhow!(e.clone()))?;
 
         let start_enter = chain_path.position_and_facing.1.reverse();
         let start_exit = chain_path.start.clone().upgrade().unwrap().position_and_facing.1;
@@ -330,7 +333,7 @@ impl ProblemSolver for Day10Part2 {
             (_, _) => unreachable!(),
         };
         let path_hash_map: HashMap<_, _> = chain_path
-            .into_iter()
+            .iter()
             .map(|(pos, (enter, exit))| (pos, (enter.unwrap_or(start_enter), exit)))
             .collect();
 
@@ -383,12 +386,13 @@ impl ProblemSolver for Day10Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day10::Day10;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day10::Day10;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {"
             ..F7.
@@ -412,13 +416,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day10::from_str(SAMPLE_INPUT_1)?.solve_1()?, 8);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day10::from_str(SAMPLE_INPUT_2)?.solve_2()?, 10);
         Ok(())
     }

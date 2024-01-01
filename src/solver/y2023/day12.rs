@@ -1,10 +1,12 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
-use anyhow::Context;
-use derive_more::{Deref, Display, FromStr};
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use anyhow::Context;
+use anyhow::Result;
+use derive_more::{Deref, Display, FromStr};
 use thiserror::Error;
+
+use crate::solver::{share_struct_solver, ProblemSolver};
 
 share_struct_solver!(Day12, Day12Part1, Day12Part2);
 
@@ -74,7 +76,7 @@ impl Spring {
         &mut self,
         spring_section_idx: usize,
         damaged_count_idx: usize,
-    ) -> anyhow::Result<usize> {
+    ) -> Result<usize> {
         if let Some(res) = self.dp[spring_section_idx][damaged_count_idx] {
             return Ok(res);
         }
@@ -82,7 +84,7 @@ impl Spring {
         let computed_val = self.spring_statuses[spring_section_idx..]
             .iter()
             .position(SpringSectionStatus::maybe_damaged)
-            .map(|damaged_start_idx_offset| -> anyhow::Result<_> {
+            .map(|damaged_start_idx_offset| -> Result<_> {
                 let damaged_start_idx = spring_section_idx + damaged_start_idx_offset;
                 if self.spring_statuses.len() - damaged_start_idx
                     < self.min_len_required[damaged_count_idx] as usize
@@ -149,14 +151,14 @@ impl SpringSectionStatus {
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Cannot convert {:?} to ngStatus", <char>::from(*.0))]
+    #[error("Cannot convert {:?} to ngStatus", < char >::from(*.0))]
     InvalidSpringStatusChar(u8),
 }
 
 impl TryFrom<u8> for SpringSectionStatus {
     type Error = anyhow::Error;
 
-    fn try_from(value: u8) -> anyhow::Result<Self> {
+    fn try_from(value: u8) -> Result<Self> {
         Ok(match value {
             b'.' => SpringSectionStatus::Operational,
             b'#' => SpringSectionStatus::Damaged,
@@ -172,24 +174,22 @@ pub struct Day12Part2(Rc<Day12Part1>);
 impl FromStr for Day12Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let springs = s
             .lines()
             .map(|s_part| {
                 let (left, right) =
                     s_part.split_once(' ').with_context(|| format!("Invalid line {:?}", s_part))?;
-                let spring_statuses = left
-                    .bytes()
-                    .map(SpringSectionStatus::try_from)
-                    .collect::<anyhow::Result<_>>()?;
+                let spring_statuses =
+                    left.bytes().map(SpringSectionStatus::try_from).collect::<Result<_>>()?;
                 let damaged_count = right
                     .split(',')
                     .map(<u8>::from_str)
                     .map(|r| r.map_err(anyhow::Error::from))
-                    .collect::<anyhow::Result<_>>()?;
+                    .collect::<Result<_>>()?;
                 Ok::<_, anyhow::Error>(Spring::new(spring_statuses, damaged_count))
             })
-            .collect::<anyhow::Result<Vec<_>>>()?;
+            .collect::<Result<Vec<_>>>()?;
 
         Ok(Day12Part1 { springs: RefCell::new(springs) })
     }
@@ -198,7 +198,7 @@ impl FromStr for Day12Part1 {
 impl ProblemSolver for Day12Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         return self.springs.borrow_mut().iter_mut().map(|s| s.combination_count(0, 0)).sum();
     }
 }
@@ -206,7 +206,7 @@ impl ProblemSolver for Day12Part1 {
 impl ProblemSolver for Day12Part2 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         return self
             .springs
             .borrow()
@@ -219,12 +219,13 @@ impl ProblemSolver for Day12Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day12::{Day12, Spring, SpringSectionStatus};
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day12::{Day12, Spring, SpringSectionStatus};
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {"
             ???.### 1,1,3
@@ -236,24 +237,24 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day12::from_str(SAMPLE_INPUT_1)?.solve_1()?, 21);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         Ok(())
     }
 
     #[test]
-    fn test_expand() -> anyhow::Result<()> {
+    fn test_expand() -> Result<()> {
         assert_eq!(
             Spring::new(
                 ".??..??...?##."
                     .bytes()
                     .map(SpringSectionStatus::try_from)
-                    .collect::<anyhow::Result<_>>()?,
+                    .collect::<Result<_>>()?,
                 vec![1, 1, 3],
             )
             .expand(5)

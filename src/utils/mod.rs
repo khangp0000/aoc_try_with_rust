@@ -1,21 +1,23 @@
-pub mod graph;
-pub mod grid;
-pub mod int_range;
-pub mod int_trait;
+use std::fmt::Formatter;
+use std::fs;
+use std::fs::{create_dir_all, read_to_string, File};
+use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
-use crate::solver::ProblemSolver;
 use anyhow::Context;
 use anyhow::Result;
 use derive_more::{Deref, Display};
 use derive_new::new;
 use regex::Regex;
 use reqwest::blocking::Client;
-use std::fmt::Formatter;
-use std::fs;
-use std::fs::{create_dir_all, read_to_string, File};
-use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
 use thiserror::Error;
+
+use crate::solver::ProblemSolver;
+
+pub mod graph;
+pub mod grid;
+pub mod int_range;
+pub mod int_trait;
 
 macro_rules! boxed_try_get_input_and_solve {
     ($solver:ty) => {

@@ -1,8 +1,11 @@
-use crate::solver::{combine_solver, ProblemSolver};
+use std::fmt::Debug;
+
 use anyhow::bail;
+use anyhow::Result;
 use derive_more::{Deref, FromStr};
 use linked_hash_map::LinkedHashMap;
-use std::fmt::Debug;
+
+use crate::solver::{combine_solver, ProblemSolver};
 
 combine_solver!(Day15, Day15Part1, Day15Part2);
 
@@ -21,7 +24,7 @@ fn my_hash(s: &str) -> u8 {
 impl FromStr for Day15Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         Ok(Day15Part1(s.trim().split(',').map(str::to_owned).collect()))
     }
 }
@@ -29,7 +32,7 @@ impl FromStr for Day15Part1 {
 impl ProblemSolver for Day15Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         Ok(self.iter().map(|b| my_hash(b) as usize).sum::<usize>())
     }
 }
@@ -37,7 +40,7 @@ impl ProblemSolver for Day15Part1 {
 impl FromStr for Day15Part2 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut map = LinkedHashMap::new();
         s.trim().split(',').try_for_each(|b| {
             let len = b.len();
@@ -68,7 +71,7 @@ impl FromStr for Day15Part2 {
 impl ProblemSolver for Day15Part2 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         let mut counts = vec![1_usize; 256];
         Ok(self
             .iter()
@@ -85,31 +88,32 @@ impl ProblemSolver for Day15Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day15::{my_hash, Day15};
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day15::{my_hash, Day15};
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {"
             rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day15::from_str(SAMPLE_INPUT_1)?.solve_1()?, 1320);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day15::from_str(SAMPLE_INPUT_1)?.solve_2()?, 145);
         Ok(())
     }
 
     #[test]
-    fn test_hash() -> anyhow::Result<()> {
+    fn test_hash() -> Result<()> {
         assert_eq!(my_hash("HASH"), 52_u8);
         Ok(())
     }

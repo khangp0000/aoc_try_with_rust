@@ -1,10 +1,11 @@
-use crate::solver::TwoPartsProblemSolver;
-use anyhow::Result;
-use anyhow::{bail, Context};
 use std::cell::OnceCell;
 use std::cmp::min;
 use std::collections::HashMap;
 use std::str::FromStr;
+
+use anyhow::{bail, Context, Result};
+
+use crate::solver::TwoPartsProblemSolver;
 
 pub struct Day3 {
     board: Vec<Vec<u8>>,
@@ -13,7 +14,7 @@ pub struct Day3 {
 impl FromStr for Day3 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         return Ok(Day3 { board: s.lines().map(str::as_bytes).map(<[u8]>::to_vec).collect() });
     }
 }
@@ -50,14 +51,11 @@ impl Day3 {
                 line[curr_idx..].iter().position(<u8>::is_ascii_digit)
             {
                 let left = curr_idx + first_digit_idx_from_curr_idx;
-                let right;
-                if let Some(int_len_minus_1) =
-                    line[(left + 1)..].iter().position(|c| !c.is_ascii_digit())
-                {
-                    right = left + int_len_minus_1 + 1;
-                } else {
-                    right = line.len();
-                }
+                let right = line[(left + 1)..]
+                    .iter()
+                    .position(|c| !c.is_ascii_digit())
+                    .map(|int_len_minus_1| left + int_len_minus_1 + 1)
+                    .unwrap_or_else(|| line.len());
 
                 if (left > 0 && line[left - 1..left].iter().any(is_symbol))
                     || (right < line.len() && line[right..right + 1].iter().any(is_symbol))
@@ -101,14 +99,11 @@ impl Day3 {
                 line[curr_idx..].iter().position(<u8>::is_ascii_digit)
             {
                 let left = curr_idx + first_digit_idx_from_curr_idx;
-                let right;
-                if let Some(int_len_minus_1) =
-                    line[(left + 1)..].iter().position(|c| !c.is_ascii_digit())
-                {
-                    right = left + int_len_minus_1 + 1;
-                } else {
-                    right = line.len();
-                }
+                let right = line[(left + 1)..]
+                    .iter()
+                    .position(|c| !c.is_ascii_digit())
+                    .map(|int_len_minus_1| left + int_len_minus_1 + 1)
+                    .unwrap_or_else(|| line.len());
 
                 let value = OnceCell::default();
                 let value_init_f = || parse_usize_str_from_bytes(&line[left..right]).unwrap();
@@ -176,7 +171,7 @@ fn is_symbol(c: &u8) -> bool {
     !c.is_ascii_digit() && *c != b'.'
 }
 
-fn parse_usize_str_from_bytes(input: &[u8]) -> anyhow::Result<usize> {
+fn parse_usize_str_from_bytes(input: &[u8]) -> Result<usize> {
     let mut res = 0_usize;
     for value in input {
         let curr_val = (*value - b'0') as usize;
@@ -191,10 +186,13 @@ fn parse_usize_str_from_bytes(input: &[u8]) -> anyhow::Result<usize> {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use anyhow::Result;
+    use indoc::indoc;
+
     use crate::solver::y2023::day3::Day3;
     use crate::solver::TwoPartsProblemSolver;
-    use indoc::indoc;
-    use std::str::FromStr;
 
     const SAMPLE_INPUT: &str = indoc! {"
             467..114..
@@ -210,13 +208,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day3::from_str(SAMPLE_INPUT)?.solve_1()?, 4361);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day3::from_str(SAMPLE_INPUT)?.solve_2()?, 467835);
         Ok(())
     }

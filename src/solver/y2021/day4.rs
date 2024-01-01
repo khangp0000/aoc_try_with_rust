@@ -1,8 +1,11 @@
-use crate::solver::TwoPartsProblemSolver;
-use anyhow::Result;
 use std::cmp::min;
 use std::collections::HashSet;
 use std::str::FromStr;
+
+use anyhow::Result;
+
+use crate::solver::TwoPartsProblemSolver;
+
 pub struct Day4 {
     cards: Vec<(HashSet<u32>, HashSet<u32>)>,
 }
@@ -65,11 +68,13 @@ fn parse_vec_u32_white_space_delimiter<B: FromIterator<u32>>(input: &str) -> B {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day4::Day4;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
+
     use anyhow::Result;
     use indoc::indoc;
-    use std::str::FromStr;
+
+    use crate::solver::TwoPartsProblemSolver;
+    use crate::solver::y2023::day4::Day4;
 
     const SAMPLE_INPUT: &str = indoc! {"
             Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53

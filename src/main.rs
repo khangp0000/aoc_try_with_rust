@@ -1,9 +1,11 @@
+use std::path::PathBuf;
+use std::time::SystemTime;
+
 use anyhow::bail;
 use anyhow::Result;
 use clap::Parser;
+
 use solver::AOC_PROBLEMS_SOLVER;
-use std::path::PathBuf;
-use std::time::SystemTime;
 
 mod solver;
 mod utils;
@@ -79,9 +81,11 @@ fn main() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::AOC_PROBLEMS_SOLVER;
-    use anyhow::Result;
     use std::path::PathBuf;
+
+    use anyhow::Result;
+
+    use crate::solver::AOC_PROBLEMS_SOLVER;
 
     const SESSION_PATH: &str = "data/session.txt";
     const INPUT_FOLDER_PATH: &str = "data";
@@ -104,17 +108,17 @@ mod tests {
     }
 
     #[test]
-    fn day2() -> anyhow::Result<()> {
+    fn day2() -> Result<()> {
         run(2023, 2)
     }
 
     #[test]
-    fn day3() -> anyhow::Result<()> {
+    fn day3() -> Result<()> {
         run(2023, 3)
     }
 
     #[test]
-    fn day4() -> anyhow::Result<()> {
+    fn day4() -> Result<()> {
         run(2023, 4)
     }
 }

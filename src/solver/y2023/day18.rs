@@ -1,9 +1,11 @@
-use crate::solver::{combine_solver, ProblemSolver};
-use crate::utils::grid::GridDirection;
-use anyhow::{anyhow, bail};
+use std::fmt::Debug;
+
+use anyhow::{anyhow, bail, Result};
 use derive_more::{Deref, FromStr};
 use itertools::Itertools;
-use std::fmt::Debug;
+
+use crate::solver::{combine_solver, ProblemSolver};
+use crate::utils::grid::GridDirection;
 
 combine_solver!(Day18, Day18Part1, Day18Part2);
 
@@ -16,7 +18,7 @@ pub struct Day18Part2(Vec<(GridDirection, isize)>);
 impl FromStr for Day18Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let inner = s
             .lines()
             .map(|line| {
@@ -45,7 +47,7 @@ impl FromStr for Day18Part1 {
 
                 Ok((direction, step))
             })
-            .try_collect()?;
+            .collect::<Result<_>>()?;
         Ok(Day18Part1(inner))
     }
 }
@@ -53,7 +55,7 @@ impl FromStr for Day18Part1 {
 impl ProblemSolver for Day18Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         let (area, perimeter, (last_x, last_y)) = self.iter().fold(
             (0_isize, 0_isize, (0_isize, 0_isize)),
             |(mut area, mut perimeter, (prev_x, prev_y)), (direction, step)| {
@@ -80,7 +82,7 @@ impl ProblemSolver for Day18Part1 {
 impl FromStr for Day18Part2 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let inner = s
             .lines()
             .map(|line| {
@@ -111,7 +113,7 @@ impl FromStr for Day18Part2 {
 impl ProblemSolver for Day18Part2 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         let (area, perimeter, (last_x, last_y)) = self.iter().fold(
             (0_isize, 0_isize, (0_isize, 0_isize)),
             |(mut area, mut perimeter, (prev_x, prev_y)), (direction, step)| {
@@ -137,12 +139,13 @@ impl ProblemSolver for Day18Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day18::Day18;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day18::Day18;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {"
             R 6 (#70c710)
@@ -162,13 +165,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day18::from_str(SAMPLE_INPUT_1)?.solve_1()?, 62);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day18::from_str(SAMPLE_INPUT_1)?.solve_2()?, 952408144115);
         Ok(())
     }

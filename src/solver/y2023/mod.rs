@@ -1,3 +1,9 @@
+use std::fmt::Display;
+use std::path::Path;
+
+use anyhow::Result;
+use phf::{phf_map, Map};
+
 use crate::solver::y2023::day1::Day1;
 use crate::solver::y2023::day10::Day10;
 use crate::solver::y2023::day11::Day11;
@@ -21,10 +27,6 @@ use crate::solver::y2023::day7::Day7;
 use crate::solver::y2023::day8::Day8;
 use crate::solver::y2023::day9::Day9;
 use crate::utils::boxed_try_get_input_and_solve;
-use anyhow::Result;
-use phf::{phf_map, Map};
-use std::fmt::Display;
-use std::path::Path;
 
 pub mod day1;
 pub mod day10;
@@ -41,6 +43,8 @@ pub mod day2;
 pub mod day20;
 pub mod day21;
 pub mod day22;
+#[cfg(feature = "wip")]
+mod day23;
 pub mod day3;
 pub mod day4;
 pub mod day5;

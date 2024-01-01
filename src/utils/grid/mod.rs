@@ -1,9 +1,10 @@
-pub mod grid_2d_bitvec;
-pub mod grid_2d_vec;
+use std::ops::Index;
 
 use derive_more::Display;
 use enumset::EnumSetType;
-use std::ops::Index;
+
+pub mod grid_2d_bitvec;
+pub mod grid_2d_vec;
 
 pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
     fn height(&self) -> usize;
@@ -102,6 +103,27 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
             GridDirection::NorthEast => self.north_east_coordinate_from(x, y, step),
             GridDirection::NorthWest => self.north_west_coordinate_from(x, y, step),
         }
+    }
+
+    fn move_from_coordinate_to_direction_with_filter<F: FnMut(usize, usize, &T) -> bool>(
+        &self,
+        x: usize,
+        y: usize,
+        step: usize,
+        direction: GridDirection,
+        mut filter: F,
+    ) -> Option<(usize, usize)> {
+        match direction {
+            GridDirection::North => self.north_coordinate_from(x, y, step),
+            GridDirection::South => self.south_coordinate_from(x, y, step),
+            GridDirection::East => self.east_coordinate_from(x, y, step),
+            GridDirection::West => self.west_coordinate_from(x, y, step),
+            GridDirection::SouthWest => self.south_west_coordinate_from(x, y, step),
+            GridDirection::SouthEast => self.south_east_coordinate_from(x, y, step),
+            GridDirection::NorthEast => self.north_east_coordinate_from(x, y, step),
+            GridDirection::NorthWest => self.north_west_coordinate_from(x, y, step),
+        }
+        .filter(|(x, y)| filter(*x, *y, &self[(*x, *y)]))
     }
 }
 

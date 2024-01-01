@@ -1,16 +1,19 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
+use std::cell::OnceCell;
+use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
+use std::ops::ControlFlow::{Break, Continue};
+use std::rc::Rc;
+
 use anyhow::bail;
+use anyhow::Result;
 use bitvec::bitvec;
 use bitvec::order::Lsb0;
 use bitvec::vec::BitVec;
 use derive_more::{Deref, Display, FromStr};
 use indexmap::IndexSet;
 use itertools::Itertools;
-use std::cell::OnceCell;
-use std::collections::HashMap;
-use std::fmt::{Debug, Formatter};
-use std::ops::ControlFlow::{Break, Continue};
-use std::rc::Rc;
+
+use crate::solver::{share_struct_solver, ProblemSolver};
 
 share_struct_solver!(Day14, Day14Part1, Day14Part2);
 
@@ -31,7 +34,7 @@ pub struct WeirdGrid {
 impl FromStr for WeirdGrid {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut cube_y_inc_x_inc = Vec::default();
         let (rounds, width, height) = s.lines().map(|line| line.bytes()).enumerate().try_fold(
             (BitVec::<usize, Lsb0>::with_capacity(s.len()), None, 0_u8),
@@ -77,7 +80,7 @@ impl Display for WeirdGrid {
             "{}",
             Itertools::intersperse(
                 string_chars.chunks(self.width as usize).map(std::str::from_utf8),
-                Ok("\n")
+                Ok("\n"),
             )
             .collect::<Result<String, _>>()
             .map_err(|_| std::fmt::Error)?
@@ -273,7 +276,7 @@ pub struct Day14Part2(Rc<Day14Part1>);
 impl FromStr for Day14Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         Ok(Day14Part1(WeirdGrid::from_str(s)?))
     }
 }
@@ -281,7 +284,7 @@ impl FromStr for Day14Part1 {
 impl ProblemSolver for Day14Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         Ok(self
             .deref()
             .clone()
@@ -298,7 +301,7 @@ impl ProblemSolver for Day14Part1 {
 impl ProblemSolver for Day14Part2 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         let mut processed_state = IndexSet::new();
         let current = self.tilt_cycle();
         processed_state.insert(current.rounds.clone());
@@ -330,12 +333,13 @@ impl ProblemSolver for Day14Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day14::Day14;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day14::Day14;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {"
             O....#....
@@ -351,13 +355,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day14::from_str(SAMPLE_INPUT_1)?.solve_1()?, 136);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day14::from_str(SAMPLE_INPUT_1)?.solve_2()?, 64);
         Ok(())
     }

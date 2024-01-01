@@ -1,8 +1,10 @@
-use crate::solver::TwoPartsProblemSolver;
+use std::str::FromStr;
+
 use anyhow::Result;
 use regex::Regex;
-use std::str::FromStr;
 use thiserror::Error;
+
+use crate::solver::TwoPartsProblemSolver;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -91,11 +93,13 @@ fn str_or_rev_digit_to_u32(s: &str) -> Result<u32> {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day1::Day1;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
+
     use anyhow::Result;
     use indoc::indoc;
-    use std::str::FromStr;
+
+    use crate::solver::y2023::day1::Day1;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {"
             1abc2

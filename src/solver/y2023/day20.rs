@@ -1,16 +1,18 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
-use crate::utils::WarningResult;
-use anyhow::{anyhow, bail, ensure};
+use std::collections::HashMap;
+use std::fmt::Debug;
+use std::ops::{ControlFlow, Not};
+use std::rc::Rc;
+
+use anyhow::{anyhow, bail, ensure, Result};
 use bitvec::bitvec;
 use bitvec::vec::BitVec;
 use derive_more::{Deref, DerefMut, From, FromStr, Into};
 use derive_new::new;
 use indexmap::IndexMap;
 use num::Integer;
-use std::collections::HashMap;
-use std::fmt::Debug;
-use std::ops::{ControlFlow, Not};
-use std::rc::Rc;
+
+use crate::solver::{share_struct_solver, ProblemSolver};
+use crate::utils::WarningResult;
 
 share_struct_solver!(Day20, Day20Part1, Day20Part2);
 
@@ -99,7 +101,7 @@ pub struct ModuleInfo {
 }
 
 impl ModuleInfo {
-    fn create_state(&self) -> anyhow::Result<ModuleState> {
+    fn create_state(&self) -> Result<ModuleState> {
         Ok(ModuleState::new(ModuleReg::create(&self.module_type, self.parents.len())?, Signal::Low))
     }
 
@@ -146,7 +148,7 @@ impl ModuleState {
 }
 
 impl ModuleReg {
-    fn create(module_type: &ModuleType, in_connection_count: usize) -> anyhow::Result<ModuleReg> {
+    fn create(module_type: &ModuleType, in_connection_count: usize) -> Result<ModuleReg> {
         match module_type {
             ModuleType::Broadcaster => {
                 ensure!(in_connection_count == 0, "Broadcaster cannot have input");
@@ -206,7 +208,7 @@ pub struct Day20Part2(Rc<Day20Part1>);
 impl FromStr for Day20Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut module_map = IndexMap::default();
         s.lines().try_for_each(|line| {
             let (module_name_full, target_modules) =
@@ -247,15 +249,14 @@ impl FromStr for Day20Part1 {
         Ok(Day20Part1::new(module_map))
     }
 }
+
 impl ProblemSolver for Day20Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         let broadcaster_id = self.get_index_of("broadcaster").unwrap();
-        let mut states = self
-            .values()
-            .map(|v| v.create_state())
-            .collect::<anyhow::Result<Vec<ModuleState>>>()?;
+        let mut states =
+            self.values().map(|v| v.create_state()).collect::<Result<Vec<ModuleState>>>()?;
         let mut lo = 0_usize;
         let mut hi = 0_usize;
         for _ in 0..1000 {
@@ -300,12 +301,10 @@ impl Day20Part1 {
 impl ProblemSolver for Day20Part2 {
     type SolutionType = WarningResult<usize>;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         let broadcaster_id = self.get_index_of("broadcaster").unwrap();
-        let mut states = self
-            .values()
-            .map(|v| v.create_state())
-            .collect::<anyhow::Result<Vec<ModuleState>>>()?;
+        let mut states =
+            self.values().map(|v| v.create_state()).collect::<Result<Vec<ModuleState>>>()?;
         let rx_parent_id = self.get("rx").unwrap().parents[0];
         let (_, rx_parent_module) = self.get_index(rx_parent_id).unwrap();
         ensure!(
@@ -407,13 +406,14 @@ impl Day20Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day20::Day20;
-    use crate::solver::TwoPartsProblemSolver;
     use std::ops::Deref;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day20::Day20;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {r"
             broadcaster -> a, b, c
@@ -440,14 +440,14 @@ mod tests {
     "};
 
     #[test]
-    fn test_solve_1() -> anyhow::Result<()> {
+    fn test_solve_1() -> Result<()> {
         assert_eq!(Day20::from_str(SAMPLE_INPUT_1)?.solve_1()?, 32000000);
         assert_eq!(Day20::from_str(SAMPLE_INPUT_2)?.solve_1()?, 11687500);
         Ok(())
     }
 
     #[test]
-    fn test_solve_2() -> anyhow::Result<()> {
+    fn test_solve_2() -> Result<()> {
         assert_eq!(*Day20::from_str(SAMPLE_INPUT_3)?.solve_2()?.deref(), 4);
         Ok(())
     }

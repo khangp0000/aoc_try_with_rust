@@ -1,7 +1,9 @@
+use std::str::FromStr;
+
+use anyhow::{bail, Context, Result};
+
 use crate::solver::y2021::day2::Movement::{Down, Forward, Up};
 use crate::solver::TwoPartsProblemSolver;
-use anyhow::{bail, Context, Result};
-use std::str::FromStr;
 
 pub struct Day2 {
     movements: Vec<Movement>,
@@ -66,11 +68,13 @@ impl TwoPartsProblemSolver for Day2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2021::day2::Day2;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
+
     use anyhow::Result;
     use indoc::indoc;
-    use std::str::FromStr;
+
+    use crate::solver::y2021::day2::Day2;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT: &str = indoc! {"
             forward 5

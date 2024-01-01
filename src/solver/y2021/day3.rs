@@ -1,4 +1,5 @@
-use crate::solver::TwoPartsProblemSolver;
+use std::str::FromStr;
+
 use anyhow::Result;
 use anyhow::{anyhow, Context};
 use bitvec::field::BitField;
@@ -7,7 +8,8 @@ use bitvec::ptr::{BitRef, Mutability};
 use bitvec::store::BitStore;
 use bitvec::vec::BitVec;
 use dyn_iter::DynIter;
-use std::str::FromStr;
+
+use crate::solver::TwoPartsProblemSolver;
 
 pub struct Day3 {
     report: Vec<BitVec<u32, Msb0>>,
@@ -119,11 +121,13 @@ fn get_next_set<
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2021::day3::Day3;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
+
     use anyhow::Result;
     use indoc::indoc;
-    use std::str::FromStr;
+
+    use crate::solver::y2021::day3::Day3;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT: &str = indoc! {"
             00100

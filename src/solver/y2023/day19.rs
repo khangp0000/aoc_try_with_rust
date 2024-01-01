@@ -1,17 +1,18 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
-use crate::utils::graph::dfs;
 use std::borrow::Cow;
-
-use crate::solver::y2023::day19::Error::InvalidCategory;
-use crate::utils::get_double_newline_regex;
-use crate::utils::int_range::IntRange;
-use anyhow::{anyhow, bail};
-use derive_more::{Deref, FromStr};
-use indexmap::IndexMap;
 use std::fmt::Debug;
 use std::ops::ControlFlow::{Break, Continue};
 use std::rc::Rc;
+
+use anyhow::{anyhow, bail, Result};
+use derive_more::{Deref, FromStr};
+use indexmap::IndexMap;
 use thiserror::Error;
+
+use crate::solver::y2023::day19::Error::InvalidCategory;
+use crate::solver::{share_struct_solver, ProblemSolver};
+use crate::utils::get_double_newline_regex;
+use crate::utils::graph::dfs;
+use crate::utils::int_range::IntRange;
 
 share_struct_solver!(Day19, Day19Part1, Day19Part2);
 
@@ -51,7 +52,7 @@ struct State {
 impl FromStr for RuleMap {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut map = IndexMap::default();
         s.lines().try_for_each(|line| parse_one_map_from_str_and_name_idx_set(line, &mut map))?;
         Ok(RuleMap(map))
@@ -61,7 +62,7 @@ impl FromStr for RuleMap {
 fn parse_one_map_from_str_and_name_idx_set(
     s: &str,
     map: &mut IndexMap<String, Option<Vec<MappingRule>>>,
-) -> anyhow::Result<()> {
+) -> Result<()> {
     let (rule_name, rule_val) =
         s.split_once('{').ok_or_else(|| anyhow!("Invalid input line: {:?}", s))?;
     if rule_val.ends_with('}') {
@@ -69,7 +70,7 @@ fn parse_one_map_from_str_and_name_idx_set(
         let rule_set = rule_val
             .split(',')
             .map(|rule| MappingRule::from_str_and_name_idx_set(rule, map))
-            .collect::<anyhow::Result<Vec<MappingRule>>>()?;
+            .collect::<Result<Vec<MappingRule>>>()?;
         let old_val = map.insert(rule_name.to_owned(), Some(rule_set));
         if matches!(old_val, Some(Some(_))) {
             bail!("There are more than 1 rule for key: {:?}", rule_name)
@@ -82,7 +83,7 @@ fn parse_one_map_from_str_and_name_idx_set(
 }
 
 impl State {
-    fn apply_rule(&self, rules: &[MappingRule]) -> anyhow::Result<Vec<State>> {
+    fn apply_rule(&self, rules: &[MappingRule]) -> Result<Vec<State>> {
         let mut next_states = Vec::default();
         let execute_result = rules.iter().try_fold(Cow::Borrowed(&self.xmas), |mut state, rule| {
             if let Some(constraint) = &rule.constraint {
@@ -158,7 +159,7 @@ impl MappingRule {
     fn from_str_and_name_idx_set(
         s: &str,
         name_idx_map: &mut IndexMap<String, Option<Vec<MappingRule>>>,
-    ) -> anyhow::Result<MappingRule> {
+    ) -> Result<MappingRule> {
         if let Some((left, right)) = s.split_once(':') {
             let entry = name_idx_map.entry(right.to_owned());
             let target_rule_idx = entry.index();
@@ -177,7 +178,7 @@ impl MappingRule {
 }
 
 impl MappingRuleConstraint {
-    fn from_str(s: &str) -> anyhow::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         if let Some((left, right)) = s.split_once('<') {
             let category = from_category_to_index(left)?;
             let upper_limit = <usize>::from_str(right)?;
@@ -198,7 +199,7 @@ impl MappingRuleConstraint {
     }
 }
 
-fn from_category_to_index(category: &str) -> anyhow::Result<usize> {
+fn from_category_to_index(category: &str) -> Result<usize> {
     match category {
         "x" => Ok(0),
         "m" => Ok(1),
@@ -220,7 +221,7 @@ pub enum Error {
 impl FromStr for Day19Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let double_newline_regex = get_double_newline_regex().clone();
         let mut part_iter = double_newline_regex.split(s);
         let rule_part =
@@ -252,7 +253,7 @@ impl FromStr for Day19Part1 {
 
         let rating_part =
             part_iter.next().ok_or_else(|| anyhow!("Cannot get rating part in input: \n{}", s))?;
-        let ratings = rating_part.lines().map(parse_rating_line).collect::<anyhow::Result<_>>()?;
+        let ratings = rating_part.lines().map(parse_rating_line).collect::<Result<_>>()?;
         Ok(Day19Part1 { accepted, input: ratings })
     }
 }
@@ -263,7 +264,7 @@ impl Day19Part1 {
     }
 }
 
-fn parse_rating_line(s: &str) -> anyhow::Result<[usize; 4]> {
+fn parse_rating_line(s: &str) -> Result<[usize; 4]> {
     if s.starts_with('{') && s.ends_with('}') {
         let s = &s[1..s.len() - 1];
         let mut res = [0_usize; 4];
@@ -283,7 +284,7 @@ fn parse_rating_line(s: &str) -> anyhow::Result<[usize; 4]> {
 impl ProblemSolver for Day19Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         Ok(self.input.iter().filter(|i| self.is_valid(i)).map(|i| i.iter().sum::<usize>()).sum())
     }
 }
@@ -291,19 +292,20 @@ impl ProblemSolver for Day19Part1 {
 impl ProblemSolver for Day19Part2 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         Ok(self.accepted.iter().map(|i| i.iter().map(IntRange::len).product::<usize>()).sum())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day19::Day19;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day19::Day19;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {r"
             px{a<2006:qkq,m>2090:A,rfg}
@@ -326,13 +328,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day19::from_str(SAMPLE_INPUT_1)?.solve_1()?, 19114);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day19::from_str(SAMPLE_INPUT_1)?.solve_2()?, 167409079868000);
         Ok(())
     }

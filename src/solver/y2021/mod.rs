@@ -1,11 +1,13 @@
+use std::fmt::Display;
+use std::path::Path;
+
+use anyhow::Result;
+use phf::{phf_map, Map};
+
 use crate::solver::y2021::day1::Day1;
 use crate::solver::y2021::day2::Day2;
 use crate::solver::y2021::day3::Day3;
 use crate::utils::boxed_try_get_input_and_solve;
-use anyhow::Result;
-use phf::{phf_map, Map};
-use std::fmt::Display;
-use std::path::Path;
 
 pub mod day1;
 pub mod day2;

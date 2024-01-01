@@ -1,8 +1,9 @@
-use crate::solver::{combine_solver, ProblemSolver};
-use crate::utils::int_trait::Integer;
 use anyhow::Context;
 use anyhow::Result;
 use derive_more::FromStr;
+
+use crate::solver::{combine_solver, ProblemSolver};
+use crate::utils::int_trait::Integer;
 
 combine_solver! {Day6, Day6Part1, Day6Part2}
 
@@ -19,7 +20,7 @@ pub struct Day6Part2 {
 impl FromStr for Day6Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut lines = s.lines();
         Ok(Day6Part1 {
             times: lines
@@ -45,7 +46,7 @@ impl FromStr for Day6Part1 {
 impl FromStr for Day6Part2 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut lines = s.lines();
 
         Ok(Day6Part2 {
@@ -134,13 +135,14 @@ fn find_time_hold_range<T: Integer>(time: T, record: T) -> Option<(T, T)> {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use anyhow::Result;
+    use indoc::indoc;
+
     use crate::solver::y2023::day6::{find_time_hold_range, Day6};
     use crate::solver::{ProblemSolver, TwoPartsProblemSolver};
     use crate::utils::Result2Parts;
-    use indoc::indoc;
-
-    use anyhow::Result;
-    use std::str::FromStr;
 
     const SAMPLE_INPUT: &str = indoc! {"
             Time:      7  15   30
@@ -154,20 +156,20 @@ mod tests {
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day6::from_str(SAMPLE_INPUT)?.solve_2()?, 71503_i64);
         Ok(())
     }
 
     #[test]
-    fn test_sample() -> anyhow::Result<()> {
+    fn test_sample() -> Result<()> {
         assert_eq!(Day6::from_str(SAMPLE_INPUT)?.solve()?, Result2Parts::new(288, 71503_i64));
 
         Ok(())
     }
 
     #[test]
-    fn test_small_1() -> anyhow::Result<()> {
+    fn test_small_1() -> Result<()> {
         assert_eq!(find_time_hold_range(7, 9).unwrap(), (2, 5));
         assert_eq!(find_time_hold_range(15, 40).unwrap(), (4, 11));
         assert_eq!(find_time_hold_range(30, 200).unwrap(), (11, 19));

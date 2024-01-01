@@ -4,12 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+wip = []
+
 
 [dependencies]
-anyhow = { version = "1.0.75", features = ["backtrace"]}
-reqwest = { version = "0.11", features = ["blocking"]}
-phf = { version = "0.11", features = ["macros"]}
-clap = { version = "4.4.10", features = ["derive"]}
+anyhow = { version = "1.0.75", features = ["backtrace"] }
+reqwest = { version = "0.11", features = ["blocking"] }
+phf = { version = "0.11", features = ["macros"] }
+clap = { version = "4.4.10", features = ["derive"] }
 indoc = "2.0.4"
 regex = "1.10.2"
 bitvec = "1.0.1"

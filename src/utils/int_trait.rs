@@ -1,8 +1,9 @@
-use num::traits::NumOps;
 use std::fmt::{Debug, Display};
 use std::num::ParseIntError;
 use std::ops::{Shl, ShlAssign, Shr, ShrAssign};
 use std::str::FromStr;
+
+use num::traits::NumOps;
 
 pub trait IntegerRef<T>: NumOps<T, T> + for<'a> NumOps<&'a T, T> {}
 

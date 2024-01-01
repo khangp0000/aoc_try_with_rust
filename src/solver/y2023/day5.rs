@@ -1,13 +1,14 @@
-use crate::solver::TwoPartsProblemSolver;
-use crate::utils::int_range::IntRange;
-use crate::utils::int_trait::Integer;
-use anyhow::Result;
-use anyhow::{bail, Context};
-
-use crate::utils::get_double_newline_regex;
 use std::borrow::Cow;
 use std::cmp::min;
 use std::str::FromStr;
+
+use anyhow::{bail, Context, Result};
+use dyn_iter::{DynIter, IntoDynIterator};
+
+use crate::solver::TwoPartsProblemSolver;
+use crate::utils::get_double_newline_regex;
+use crate::utils::int_range::IntRange;
+use crate::utils::int_trait::Integer;
 
 pub struct Day5<T: Integer> {
     seeds: Vec<T>,
@@ -17,7 +18,7 @@ pub struct Day5<T: Integer> {
 impl<T: Integer> FromStr for Day5<T> {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let double_newline_regex = get_double_newline_regex().clone();
         let mut parts = double_newline_regex.split(s);
         let seed_line =
@@ -80,9 +81,9 @@ where
     type Solution2Type = T;
 
     fn solve_1(&self) -> Result<T> {
-        let mut seeds: Box<dyn Iterator<Item = T>> = Box::new(self.seeds.iter().map(T::clone));
+        let mut seeds: DynIter<T> = self.seeds.iter().map(T::clone).into_dyn_iter();
         for (_, map) in &self.data {
-            seeds = Box::new(seeds.map(move |s| get_from_range_to_range_maps(map, &s)))
+            seeds = seeds.map(move |s| get_from_range_to_range_maps(map, &s)).into_dyn_iter()
         }
         seeds.try_fold(T::max_value(), |a, b| Ok(min(a, b)))
     }
@@ -188,11 +189,13 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use anyhow::Result;
+    use indoc::indoc;
+
     use crate::solver::y2023::day5::Day5;
     use crate::solver::TwoPartsProblemSolver;
-
-    use indoc::indoc;
-    use std::str::FromStr;
 
     const SAMPLE_INPUT: &str = indoc! {"
             seeds: 79 14 55 13
@@ -231,13 +234,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day5::<u32>::from_str(SAMPLE_INPUT)?.solve_1()?, 35);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day5::<u32>::from_str(SAMPLE_INPUT)?.solve_2()?, 46);
         Ok(())
     }

@@ -1,8 +1,11 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
-use derive_more::{Deref, FromStr};
-use itertools::Itertools;
 use std::collections::{BTreeSet, HashMap};
 use std::rc::Rc;
+
+use anyhow::Result;
+use derive_more::{Deref, FromStr};
+use itertools::Itertools;
+
+use crate::solver::{share_struct_solver, ProblemSolver};
 
 share_struct_solver!(Day11, Day11Part1, Day11Part2);
 
@@ -18,7 +21,7 @@ pub struct Day11Part2(Rc<Day11Part1>);
 impl FromStr for Day11Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let galaxies = s
             .lines()
             .enumerate()
@@ -49,7 +52,7 @@ impl FromStr for Day11Part1 {
 impl ProblemSolver for Day11Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         Ok(self.find_distance_with_expand_factor(2))
     }
 }
@@ -96,19 +99,20 @@ pub fn find_galaxy_1d_distance(
 impl ProblemSolver for Day11Part2 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         Ok(self.find_distance_with_expand_factor(1000000))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day11::{Day11, Day11Part1};
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day11::{Day11, Day11Part1};
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {"
             ...#......
@@ -124,18 +128,18 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day11::from_str(SAMPLE_INPUT_1)?.solve_1()?, 374);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         Ok(())
     }
 
     #[test]
-    fn test_expand() -> anyhow::Result<()> {
+    fn test_expand() -> Result<()> {
         assert_eq!(
             Day11Part1::from_str(SAMPLE_INPUT_1)?.find_distance_with_expand_factor(10),
             1030

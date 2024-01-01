@@ -1,16 +1,18 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
-use crate::utils::int_range::IntRange;
-use anyhow::{anyhow, ensure};
-use derive_more::{Deref, FromStr};
-use derive_new::new;
-use dyn_iter::{DynIter, IntoDynIterator};
-use itertools::Itertools;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::iter;
 use std::rc::Rc;
+
+use anyhow::{anyhow, ensure, Result};
+use derive_more::{Deref, FromStr};
+use derive_new::new;
+use dyn_iter::{DynIter, IntoDynIterator};
+use itertools::Itertools;
+
+use crate::solver::{share_struct_solver, ProblemSolver};
+use crate::utils::int_range::IntRange;
 
 share_struct_solver!(Day22, Day22Part1, Day22Part2);
 
@@ -36,7 +38,7 @@ enum Brick {
 impl FromStr for Brick {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         s.split_once('~').ok_or_else(|| anyhow!("Cannot find '~' in {:?}", s)).and_then(
             |(left, right)| {
                 let mut left_iter = left.split(',');
@@ -149,8 +151,8 @@ pub struct Day22Part2(Rc<Day22Part1>);
 impl FromStr for Day22Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
-        let mut bricks = s.lines().map(Brick::from_str).collect::<anyhow::Result<Vec<_>>>()?;
+    fn from_str(s: &str) -> Result<Self> {
+        let mut bricks = s.lines().map(Brick::from_str).collect::<Result<Vec<_>>>()?;
         bricks.sort_unstable_by_key(|brick| brick.get_bottom());
 
         let mut height_map = HashMap::<(u16, u16), (BrickHeight, BrickIdx)>::default();
@@ -197,7 +199,7 @@ impl FromStr for Day22Part1 {
 impl ProblemSolver for Day22Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         Ok(self
             .brick_supporting
             .iter()
@@ -211,9 +213,10 @@ impl ProblemSolver for Day22Part1 {
 impl ProblemSolver for Day22Part2 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         let len = self.brick_supported_by.len();
-        // destroyed_list[i] is set of brick it will also destroy if brick[i] is destroyed
+        // destroyed_list[i] is set of brick it will also destroy if brick[i] is
+        // destroyed
         let destroyed_list = (0..len)
             .map(|i| {
                 let mut map = BitSet::default();
@@ -222,8 +225,8 @@ impl ProblemSolver for Day22Part2 {
             })
             .collect_vec();
 
-        // affected_list[i] is set of all dependent brick of brick[i], meaning they MAY be
-        // destroyed if brick[i] is destroyed.
+        // affected_list[i] is set of all dependent brick of brick[i], meaning they MAY
+        // be destroyed if brick[i] is destroyed.
         let mut affected_list =
             self.brick_supporting.iter().cloned().map(RefCell::new).collect_vec();
         self.brick_supporting.iter().enumerate().rev().for_each(|(brick_id, supporting)| {
@@ -233,11 +236,15 @@ impl ProblemSolver for Day22Part2 {
 
         destroyed_list.iter().rev().for_each(|destroyed| {
             // Since the supporter of a brick id always have smaller id, we can iterate
-            // through the affected list once in increasing order of brick id, adding destroy[id]
-            // if all the brick supporting that brick is in destroyed. And since affected_list[i]
-            // always >= i, we create destroy in reverse order so we can get the previously
+            // through the affected list once in increasing order of brick id, adding
+            // destroy[id] if all the brick supporting that brick is in
+            // destroyed. And since affected_list[i] always >= i, we create
+            // destroy in reverse order so we can get the previously
             // computed destroy[id].
-            affected_list.pop().unwrap().into_inner()
+            affected_list
+                .pop()
+                .unwrap()
+                .into_inner()
                 .iter()
                 .filter(|affected_id| {
                     self.brick_supported_by[*affected_id].is_subset(&*destroyed.borrow())
@@ -254,12 +261,13 @@ impl ProblemSolver for Day22Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day22::Day22;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
+    use crate::solver::y2023::day22::Day22;
     use crate::solver::TwoPartsProblemSolver;
-    use std::str::FromStr;
 
     const SAMPLE_INPUT_1: &str = indoc! {r"
             1,0,1~1,2,1
@@ -272,13 +280,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_solve_1() -> anyhow::Result<()> {
+    fn test_solve_1() -> Result<()> {
         assert_eq!(Day22::from_str(SAMPLE_INPUT_1)?.solve_1()?, 5);
         Ok(())
     }
 
     #[test]
-    fn test_solve_2() -> anyhow::Result<()> {
+    fn test_solve_2() -> Result<()> {
         assert_eq!(Day22::from_str(SAMPLE_INPUT_1)?.solve_2()?, 7);
         Ok(())
     }

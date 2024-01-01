@@ -1,6 +1,8 @@
-use crate::solver::TwoPartsProblemSolver;
-use anyhow::Result;
 use std::str::FromStr;
+
+use anyhow::Result;
+
+use crate::solver::TwoPartsProblemSolver;
 
 pub struct Day1 {
     report: Vec<u32>,
@@ -44,11 +46,13 @@ impl TwoPartsProblemSolver for Day1 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2021::day1::Day1;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
+
     use anyhow::Result;
     use indoc::indoc;
-    use std::str::FromStr;
+
+    use crate::solver::y2021::day1::Day1;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT: &str = indoc! {"
             199

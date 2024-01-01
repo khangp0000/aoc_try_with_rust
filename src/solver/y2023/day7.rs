@@ -1,7 +1,9 @@
-use crate::solver::{combine_solver, ProblemSolver};
-use anyhow::{bail, Context};
-use derive_more::{Deref, Display, FromStr};
 use std::collections::BinaryHeap;
+
+use anyhow::{bail, Context, Result};
+use derive_more::{Deref, Display, FromStr};
+
+use crate::solver::{combine_solver, ProblemSolver};
 
 combine_solver! {Day7, Day7Part1, Day7Part2}
 
@@ -25,7 +27,7 @@ pub enum CardHand {
 impl FromStr for CardHand {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         if s.len() != 5 {
             bail!("Invalid input for CardHand: {:?}", s);
         }
@@ -77,7 +79,7 @@ pub struct CardHandWithJoker(CardHand);
 impl FromStr for CardHandWithJoker {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         if s.len() != 5 {
             bail!("Invalid input for CardHand: {:?}", s);
         }
@@ -157,7 +159,7 @@ impl FromStr for CardHandWithJoker {
 impl FromStr for Day7Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut cards: Vec<_> = s
             .lines()
             .map(|line| line.split_whitespace())
@@ -171,7 +173,7 @@ impl FromStr for Day7Part1 {
                     )?,
                 ))
             })
-            .collect::<anyhow::Result<_>>()?;
+            .collect::<Result<_>>()?;
         cards.sort_unstable();
         Ok(Day7Part1(cards))
     }
@@ -180,7 +182,7 @@ impl FromStr for Day7Part1 {
 impl ProblemSolver for Day7Part1 {
     type SolutionType = u32;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         return Ok(get_hands_rank(self.deref()));
     }
 }
@@ -188,7 +190,7 @@ impl ProblemSolver for Day7Part1 {
 impl FromStr for Day7Part2 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut cards: Vec<_> = s
             .lines()
             .map(|line| line.split_whitespace())
@@ -202,7 +204,7 @@ impl FromStr for Day7Part2 {
                     )?,
                 ))
             })
-            .collect::<anyhow::Result<_>>()?;
+            .collect::<Result<_>>()?;
         cards.sort_unstable();
         Ok(Day7Part2(cards))
     }
@@ -211,7 +213,7 @@ impl FromStr for Day7Part2 {
 impl ProblemSolver for Day7Part2 {
     type SolutionType = u32;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         return Ok(get_hands_rank(self.deref()));
     }
 }
@@ -222,10 +224,13 @@ fn get_hands_rank<'a, H: 'a, I: IntoIterator<Item = &'a (H, u32)>>(hands: I) -> 
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use anyhow::Result;
+    use indoc::indoc;
+
     use crate::solver::y2023::day7::{CardHand, CardHandWithJoker, Day7};
     use crate::solver::TwoPartsProblemSolver;
-    use indoc::indoc;
-    use std::str::FromStr;
 
     const SAMPLE_INPUT: &str = indoc! {"
             32T3K 765
@@ -236,25 +241,25 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day7::from_str(SAMPLE_INPUT)?.solve_1()?, 6440);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day7::from_str(SAMPLE_INPUT)?.solve_2()?, 5905);
         Ok(())
     }
 
     #[test]
-    fn test_card_hand() -> anyhow::Result<()> {
+    fn test_card_hand() -> Result<()> {
         assert_eq!(CardHand::from_str("T55J5")?, CardHand::ThreeOfAKind(235706));
         Ok(())
     }
 
     #[test]
-    fn test_card_hand_with_joker() -> anyhow::Result<()> {
+    fn test_card_hand_with_joker() -> Result<()> {
         assert_eq!(
             CardHandWithJoker::from_str("T55J5")?,
             CardHandWithJoker(CardHand::FourOfAKind(266517))

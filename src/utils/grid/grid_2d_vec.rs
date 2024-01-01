@@ -1,10 +1,12 @@
-use crate::utils::grid::Grid2d;
-use anyhow::Result;
 use std::cell::OnceCell;
 use std::fmt::Debug;
 use std::ops::Index;
 use std::slice::Iter;
+
+use anyhow::Result;
 use thiserror::Error;
+
+use crate::utils::grid::Grid2d;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -55,7 +57,7 @@ impl<T> Grid2dVec<T> {
                     Err(Error::InvalidWidth)?
                 }
             })
-            .collect::<anyhow::Result<Vec<_>>>()?;
+            .collect::<Result<Vec<_>>>()?;
 
         let height = grid.len();
         let &width = predict_width.get_or_init(|| 0_usize);

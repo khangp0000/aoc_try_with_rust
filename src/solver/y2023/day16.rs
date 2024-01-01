@@ -1,20 +1,22 @@
-use crate::solver::{share_struct_parallel_solver, ProblemSolver};
-use crate::utils::grid::grid_2d_vec::Grid2dVec;
-use crate::utils::grid::{Grid2d, GridDirection};
-use anyhow::Context;
-use bitvec::bitvec;
-use derive_more::{Deref, Display, FromStr};
-use itertools::Itertools;
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
 use std::cell::RefCell;
 use std::cmp::max;
 use std::fmt::Debug;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::utils::graph::dfs;
+use anyhow::Context;
+use anyhow::Result;
+use bitvec::bitvec;
+use derive_more::{Deref, Display, FromStr};
+use itertools::Itertools;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 use thiserror::Error;
+
+use crate::solver::{share_struct_parallel_solver, ProblemSolver};
+use crate::utils::graph::dfs;
+use crate::utils::grid::grid_2d_vec::Grid2dVec;
+use crate::utils::grid::{Grid2d, GridDirection};
 
 share_struct_parallel_solver!(Day16, Day16Part1, Day16Part2);
 
@@ -86,14 +88,14 @@ impl PositionKind {
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Cannot convert {:?} to PositionKind", <char>::from(*.0))]
+    #[error("Cannot convert {:?} to PositionKind", < char >::from(*.0))]
     InvalidPositionChar(u8),
 }
 
 impl TryFrom<u8> for PositionKind {
     type Error = anyhow::Error;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u8) -> Result<Self> {
         match value {
             b'.' => Ok(PositionKind::Ground),
             b'|' => Ok(PositionKind::VerticalSplitter),
@@ -108,7 +110,7 @@ impl TryFrom<u8> for PositionKind {
 impl FromStr for Day16Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let grid = Grid2dVec::<PositionKind>::try_new(
             s.lines().map(str::bytes).map(|iter| iter.map(PositionKind::try_from)),
         )?;
@@ -123,7 +125,7 @@ impl Day16Part1 {
         x: usize,
         y: usize,
         starting_face: GridDirection,
-    ) -> anyhow::Result<usize> {
+    ) -> Result<usize> {
         let visited_pos = Rc::new(RefCell::new(bitvec!(0; self.grid.height() * self.grid.width())));
         dfs(
             (x, y, starting_face),
@@ -157,7 +159,7 @@ impl Day16Part1 {
 impl ProblemSolver for Day16Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         self.find_num_energized(0, 0, GridDirection::East)
     }
 }
@@ -165,7 +167,7 @@ impl ProblemSolver for Day16Part1 {
 impl ProblemSolver for Day16Part2 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         (0..self.grid.width())
             .flat_map(|x| {
                 [(x, 0, GridDirection::South), (x, self.grid.height() - 1, GridDirection::North)]
@@ -194,12 +196,13 @@ impl ProblemSolver for Day16Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day16::Day16;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day16::Day16;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {r"
             .|...\....
@@ -215,13 +218,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day16::from_str(SAMPLE_INPUT_1)?.solve_1()?, 46);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day16::from_str(SAMPLE_INPUT_1)?.solve_2()?, 51);
         Ok(())
     }

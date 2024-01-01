@@ -1,15 +1,17 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
-use crate::utils::get_double_newline_regex;
-use crate::utils::int_trait::Integer;
-use anyhow::{bail, Context};
-use bitvec::field::BitField;
-use bitvec::order::Msb0;
-use bitvec::vec::BitVec;
-use derive_more::{Deref, FromStr};
 use std::cmp::min;
 use std::fmt::Debug;
 use std::ops::ControlFlow::{Break, Continue};
 use std::rc::Rc;
+
+use anyhow::{bail, Context, Result};
+use bitvec::field::BitField;
+use bitvec::order::Msb0;
+use bitvec::vec::BitVec;
+use derive_more::{Deref, FromStr};
+
+use crate::solver::{share_struct_solver, ProblemSolver};
+use crate::utils::get_double_newline_regex;
+use crate::utils::int_trait::Integer;
 
 share_struct_solver!(Day13, Day13Part1, Day13Part2);
 
@@ -28,7 +30,7 @@ pub struct Day13Part2(Rc<Day13Part1>);
 impl FromStr for Day13Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let double_newline_regex = get_double_newline_regex().clone();
         let grids = double_newline_regex
             .split(s.trim_end())
@@ -82,7 +84,7 @@ impl FromStr for Day13Part1 {
                         .collect(),
                 })
             })
-            .collect::<anyhow::Result<Vec<_>>>()?;
+            .collect::<Result<Vec<_>>>()?;
 
         Ok(Day13Part1(grids))
     }
@@ -130,9 +132,9 @@ fn is_mirrored_with_1_flip_at<T: Integer>(idx: usize, slice: &[T]) -> bool {
 impl ProblemSolver for Day13Part1 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         self.iter().enumerate().map(|(idx, grid)|
-            find_mirror_idx(grid.verticals.as_slice()).or_else(|| find_mirror_idx(grid.horizontals.as_slice()).map(|v| v*100_usize))
+            find_mirror_idx(grid.verticals.as_slice()).or_else(|| find_mirror_idx(grid.horizontals.as_slice()).map(|v| v * 100_usize))
                 .with_context(|| format!("Cannot find mirror line for both side of grid number {} (count from 0)", idx))
         ).sum()
     }
@@ -141,9 +143,9 @@ impl ProblemSolver for Day13Part1 {
 impl ProblemSolver for Day13Part2 {
     type SolutionType = usize;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         self.iter().enumerate().map(|(idx, grid)|
-            find_mirror_with_1_flip_idx(grid.verticals.as_slice()).or_else(|| find_mirror_with_1_flip_idx(grid.horizontals.as_slice()).map(|v| v*100_usize))
+            find_mirror_with_1_flip_idx(grid.verticals.as_slice()).or_else(|| find_mirror_with_1_flip_idx(grid.horizontals.as_slice()).map(|v| v * 100_usize))
                 .with_context(|| format!("Cannot find mirror line for both side of grid number {} (count from 0)", idx))
         ).sum()
     }
@@ -151,12 +153,13 @@ impl ProblemSolver for Day13Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day13::Day13;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day13::Day13;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {"
             #.##..##.
@@ -177,13 +180,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day13::from_str(SAMPLE_INPUT_1)?.solve_1()?, 405);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day13::from_str(SAMPLE_INPUT_1)?.solve_2()?, 400);
         Ok(())
     }

@@ -1,8 +1,11 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
-use anyhow::bail;
-use derive_more::{Deref, FromStr};
 use std::borrow::Cow;
 use std::rc::Rc;
+
+use anyhow::bail;
+use anyhow::Result;
+use derive_more::{Deref, FromStr};
+
+use crate::solver::{share_struct_solver, ProblemSolver};
 
 share_struct_solver!(Day9, Day9Part1, Day9Part2);
 
@@ -15,16 +18,16 @@ pub struct Day9Part2(Rc<Day9Part1>);
 impl FromStr for Day9Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         Ok(Day9Part1(
             s.lines()
                 .map(|line| {
                     line.split_whitespace()
                         .map(<i32>::from_str)
                         .map(|r| r.map_err(anyhow::Error::from))
-                        .collect::<anyhow::Result<Vec<_>>>()
+                        .collect::<Result<Vec<_>>>()
                 })
-                .collect::<anyhow::Result<Vec<_>>>()?,
+                .collect::<Result<Vec<_>>>()?,
         ))
     }
 }
@@ -32,12 +35,12 @@ impl FromStr for Day9Part1 {
 impl ProblemSolver for Day9Part1 {
     type SolutionType = i32;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        return self.iter().map(predict_next_val).sum::<anyhow::Result<_>>();
+    fn solve(&self) -> Result<Self::SolutionType> {
+        return self.iter().map(predict_next_val).sum::<Result<_>>();
     }
 }
 
-fn predict_next_val(input: &Vec<i32>) -> anyhow::Result<i32> {
+fn predict_next_val(input: &Vec<i32>) -> Result<i32> {
     let mut current = Cow::Borrowed(input);
     let mut sum = 0_i32;
     while current.len() > 1 {
@@ -57,12 +60,12 @@ fn predict_next_val(input: &Vec<i32>) -> anyhow::Result<i32> {
 impl ProblemSolver for Day9Part2 {
     type SolutionType = i32;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
-        return self.iter().map(predict_prev_val).sum::<anyhow::Result<_>>();
+    fn solve(&self) -> Result<Self::SolutionType> {
+        return self.iter().map(predict_prev_val).sum::<Result<_>>();
     }
 }
 
-fn predict_prev_val(input: &Vec<i32>) -> anyhow::Result<i32> {
+fn predict_prev_val(input: &Vec<i32>) -> Result<i32> {
     let mut current = Cow::Borrowed(input);
     let mut acc = 0_i32;
     let mut adding = true;
@@ -90,10 +93,13 @@ fn predict_prev_val(input: &Vec<i32>) -> anyhow::Result<i32> {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use anyhow::Result;
+    use indoc::indoc;
+
     use crate::solver::y2023::day9::Day9;
     use crate::solver::TwoPartsProblemSolver;
-    use indoc::indoc;
-    use std::str::FromStr;
 
     const SAMPLE_INPUT: &str = indoc! {"
             0 3 6 9 12 15
@@ -102,13 +108,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day9::from_str(SAMPLE_INPUT)?.solve_1()?, 114);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day9::from_str(SAMPLE_INPUT)?.solve_2()?, 2);
         Ok(())
     }

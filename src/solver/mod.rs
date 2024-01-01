@@ -1,14 +1,17 @@
-pub mod y2021;
-pub mod y2023;
-use crate::solver::y2021::Y2021_SOLVER;
-use crate::solver::y2023::Y2023_SOLVER;
-use crate::utils::Result2Parts;
-use anyhow::Result;
-use phf::{phf_map, Map};
 use std::fmt::Display;
 use std::path::Path;
 use std::str::FromStr;
+
+use anyhow::Result;
+use phf::{phf_map, Map};
 use thiserror::Error;
+
+use crate::solver::y2021::Y2021_SOLVER;
+use crate::solver::y2023::Y2023_SOLVER;
+use crate::utils::Result2Parts;
+
+pub mod y2021;
+pub mod y2023;
 
 pub const AOC_PROBLEMS_SOLVER: Map<
     u16,

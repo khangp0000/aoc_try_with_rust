@@ -1,8 +1,10 @@
-use crate::solver::TwoPartsProblemSolver;
-use anyhow::{Context, Result};
 use std::cmp::max;
 use std::str::FromStr;
+
+use anyhow::{Context, Result};
 use thiserror::Error;
+
+use crate::solver::TwoPartsProblemSolver;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -28,7 +30,7 @@ pub struct CubeSet {
 impl FromStr for CubeSet {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut red = 0_u32;
         let mut green = 0_u32;
         let mut blue = 0_u32;
@@ -60,7 +62,7 @@ impl FromStr for CubeSet {
 impl FromStr for Game {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let (game_number, sets) = s
             .split_once(':')
             .ok_or_else(|| crate::utils::Error::FailedToSplit(s.to_owned(), ':'))?;
@@ -83,8 +85,8 @@ impl FromStr for Game {
 impl FromStr for Day2 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Day2 { games: s.lines().map(Game::from_str).collect::<anyhow::Result<_>>()? })
+    fn from_str(s: &str) -> Result<Self> {
+        Ok(Day2 { games: s.lines().map(Game::from_str).collect::<Result<_>>()? })
     }
 }
 
@@ -92,7 +94,7 @@ impl TwoPartsProblemSolver for Day2 {
     type Solution1Type = u32;
     type Solution2Type = u32;
 
-    fn solve_1(&self) -> anyhow::Result<u32> {
+    fn solve_1(&self) -> Result<u32> {
         return Ok(self
             .games
             .iter()
@@ -105,7 +107,7 @@ impl TwoPartsProblemSolver for Day2 {
             .sum::<u32>());
     }
 
-    fn solve_2(&self) -> anyhow::Result<u32> {
+    fn solve_2(&self) -> Result<u32> {
         return Ok(self
             .games
             .iter()
@@ -127,10 +129,13 @@ impl TwoPartsProblemSolver for Day2 {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use anyhow::Result;
+    use indoc::indoc;
+
     use crate::solver::y2023::day2::Day2;
     use crate::solver::TwoPartsProblemSolver;
-    use indoc::indoc;
-    use std::str::FromStr;
 
     const SAMPLE_INPUT: &str = indoc! {"
             Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
@@ -141,13 +146,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day2::from_str(SAMPLE_INPUT)?.solve_1()?, 8);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(Day2::from_str(SAMPLE_INPUT)?.solve_2()?, 2286);
         Ok(())
     }

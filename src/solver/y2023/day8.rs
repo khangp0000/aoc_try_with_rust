@@ -1,13 +1,14 @@
-use crate::solver::{share_struct_solver, ProblemSolver};
-use crate::utils::WarningResult;
-use anyhow::Result;
-use anyhow::{anyhow, bail};
-use derive_more::{Deref, Display, FromStr};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::ops::ControlFlow;
 use std::rc::Rc;
+
+use anyhow::{anyhow, bail, Result};
+use derive_more::{Deref, Display, FromStr};
 use thiserror::Error;
+
+use crate::solver::{share_struct_solver, ProblemSolver};
+use crate::utils::WarningResult;
 
 const MAX_MAP_COUNT: usize = 100000_usize;
 
@@ -36,7 +37,7 @@ pub enum Error {
 impl TryFrom<char> for Direction {
     type Error = anyhow::Error;
 
-    fn try_from(value: char) -> Result<Self, Self::Error> {
+    fn try_from(value: char) -> Result<Self> {
         match value.to_ascii_lowercase() {
             'l' | 'L' => Ok(Direction::Left),
             'r' | 'R' => Ok(Direction::Right),
@@ -59,10 +60,10 @@ fn parse_map_line(s: &str) -> Result<(String, (String, String))> {
 impl FromStr for Day8Part1 {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut lines = s.lines();
         let directions = if let Some(direction_line) = lines.next() {
-            direction_line.chars().map(Direction::try_from).collect::<anyhow::Result<Vec<_>>>()?
+            direction_line.chars().map(Direction::try_from).collect::<Result<Vec<_>>>()?
         } else {
             bail!("Direction line is missing from input.")
         };
@@ -75,7 +76,7 @@ impl FromStr for Day8Part1 {
             bail!("Separation empty line is missing from input.")
         }
 
-        let map = lines.map(parse_map_line).collect::<anyhow::Result<_>>()?;
+        let map = lines.map(parse_map_line).collect::<Result<_>>()?;
         Ok(Day8Part1 { directions, map })
     }
 }
@@ -83,7 +84,7 @@ impl FromStr for Day8Part1 {
 impl ProblemSolver for Day8Part1 {
     type SolutionType = u32;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         return match self.directions.iter().cycle().take(MAX_MAP_COUNT).try_fold(
             ("AAA", 0_u32),
             |(key, count), direction| {
@@ -112,7 +113,7 @@ impl ProblemSolver for Day8Part1 {
 impl ProblemSolver for Day8Part2 {
     type SolutionType = WarningResult<usize>;
 
-    fn solve(&self) -> anyhow::Result<Self::SolutionType> {
+    fn solve(&self) -> Result<Self::SolutionType> {
         return match self.directions.iter().cycle()
             .take(MAX_MAP_COUNT)
             .try_fold((self.map.keys().filter(|s| s.ends_with('A')).collect::<Vec<_>>(), 0_u32, 1_usize), |(keys, mut count, mut lcm), direction| {
@@ -122,7 +123,7 @@ impl ProblemSolver for Day8Part2 {
                         Direction::Right => value_right,
                     }
                 ).ok_or_else(|| anyhow!("Cannot find value for key {:?}", key)))
-                    .collect::<anyhow::Result<Vec<_>>>();
+                    .collect::<Result<Vec<_>>>();
 
                 match res {
                     Ok(new_keys) => {
@@ -130,7 +131,7 @@ impl ProblemSolver for Day8Part2 {
                         let new_keys = new_keys.into_iter().filter(|key| !key.ends_with('Z')).collect::<Vec<_>>();
                         let len_after_filter = new_keys.len();
                         count += 1;
-                        if len_after_filter !=  len_before_filter {
+                        if len_after_filter != len_before_filter {
                             lcm = num::integer::lcm(lcm, count as usize);
 
                             if len_after_filter == 0 {
@@ -151,12 +152,13 @@ impl ProblemSolver for Day8Part2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::solver::y2023::day8::Day8;
-    use crate::solver::TwoPartsProblemSolver;
+    use std::str::FromStr;
 
+    use anyhow::Result;
     use indoc::indoc;
 
-    use std::str::FromStr;
+    use crate::solver::y2023::day8::Day8;
+    use crate::solver::TwoPartsProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {"
             LLR
@@ -180,13 +182,13 @@ mod tests {
     "};
 
     #[test]
-    fn test_sample_1() -> anyhow::Result<()> {
+    fn test_sample_1() -> Result<()> {
         assert_eq!(Day8::from_str(SAMPLE_INPUT_1)?.solve_1()?, 6);
         Ok(())
     }
 
     #[test]
-    fn test_sample_2() -> anyhow::Result<()> {
+    fn test_sample_2() -> Result<()> {
         assert_eq!(*Day8::from_str(SAMPLE_INPUT_2)?.solve_2()?, 6);
         Ok(())
     }
