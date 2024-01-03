@@ -105,14 +105,13 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
         }
     }
 
-    fn move_from_coordinate_to_direction_with_filter<F: FnMut(usize, usize, &T) -> bool>(
+    fn move_from_coordinate_to_direction_with_value(
         &self,
         x: usize,
         y: usize,
         step: usize,
         direction: GridDirection,
-        mut filter: F,
-    ) -> Option<(usize, usize)> {
+    ) -> Option<(usize, usize, &T)> {
         match direction {
             GridDirection::North => self.north_coordinate_from(x, y, step),
             GridDirection::South => self.south_coordinate_from(x, y, step),
@@ -123,7 +122,7 @@ pub trait Grid2d<T>: Index<(usize, usize), Output = T> {
             GridDirection::NorthEast => self.north_east_coordinate_from(x, y, step),
             GridDirection::NorthWest => self.north_west_coordinate_from(x, y, step),
         }
-        .filter(|(x, y)| filter(*x, *y, &self[(*x, *y)]))
+        .map(|(x, y)| (x, y, &self[(x, y)]))
     }
 }
 

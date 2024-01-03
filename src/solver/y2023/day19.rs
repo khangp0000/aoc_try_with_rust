@@ -239,8 +239,7 @@ impl FromStr for Day19Part1 {
                 if state.evaluate_rule_idx == accept_rule_idx {
                     accepted.push(state.xmas);
                     Vec::default()
-                } else if let (_, Some(rule)) = rule_map.get_index(state.evaluate_rule_idx).unwrap()
-                {
+                } else if let Some(rule) = &rule_map[state.evaluate_rule_idx] {
                     state.apply_rule(rule).unwrap()
                 } else {
                     Vec::default()

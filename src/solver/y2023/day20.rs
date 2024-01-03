@@ -305,7 +305,7 @@ impl ProblemSolver for Day20Part2 {
         let broadcaster_id = self.get_index_of("broadcaster").unwrap();
         let mut states =
             self.values().map(|v| v.create_state()).collect::<Result<Vec<ModuleState>>>()?;
-        let rx_parent_id = self.get("rx").unwrap().parents[0];
+        let rx_parent_id = self["rx"].parents[0];
         let (_, rx_parent_module) = self.get_index(rx_parent_id).unwrap();
         ensure!(
             rx_parent_module.module_type == ModuleType::Conjunction,

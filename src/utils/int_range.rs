@@ -53,7 +53,7 @@ impl<T: Integer> IntRange<T> {
     }
 
     pub fn sub(&self, other: &Self) -> Vec<Self> {
-        let mut res = Vec::default();
+        let mut res = Vec::with_capacity(2);
         if let Some(intersection) = self.intersect(other) {
             if intersection.start != self.start {
                 res.push(Self::new(self.start, intersection.start - T::one()).unwrap());

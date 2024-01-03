@@ -145,14 +145,17 @@ impl<S: BitStore, O: BitOrder> Grid2dBitVec<S, O> {
         return self.grid.chunks(self.width);
     }
 
+    #[allow(dead_code)]
     pub fn get_row(&self, idx: usize) -> &BitSlice<S, O> {
         &self.grid[idx * self.width..(idx + 1) * self.width]
     }
 
+    #[allow(dead_code)]
     pub fn cols(&self) -> Chunks<'_, S, O> {
         return self.get_grid_x_significant().chunks(self.height);
     }
 
+    #[allow(dead_code)]
     pub fn get_col(&self, idx: usize) -> &BitSlice<S, O> {
         &self.get_grid_x_significant()[idx * self.height..(idx + 1) * self.height]
     }
@@ -172,6 +175,7 @@ impl<S: BitStore, O: BitOrder> Grid2dBitVec<S, O> {
         y * self.width + x
     }
 
+    #[allow(dead_code)]
     fn flatten_idx_x_significant(&self, x: usize, y: usize) -> usize {
         assert!(y < self.height);
         assert!(x < self.width);

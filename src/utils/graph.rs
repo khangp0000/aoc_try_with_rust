@@ -3,6 +3,7 @@ use std::collections::{BinaryHeap, HashSet, VecDeque};
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::iter;
+use std::ops::ControlFlow;
 
 #[derive(Debug)]
 pub struct StateWithWeight<A, S, W: Ord> {
@@ -39,33 +40,9 @@ impl<A, S: Eq + Hash, W: Ord> Ord for StateWithWeight<A, S, W> {
 
 pub fn dfs<S, N, E, I, A, AF>(
     start: S,
-    neighbor_fn: N,
-    end_state_fn: E,
-    acc_init: A,
-    acc_fn: AF,
-) -> Option<(A, S)>
-where
-    A: Clone,
-    S: Eq + PartialEq + Hash + Debug,
-    N: FnMut(&S) -> I,
-    E: FnMut(&A, &S) -> bool,
-    I: IntoIterator<Item = S>,
-    AF: FnMut(&A, &S) -> A,
-{
-    dfs_full(
-        &mut vec![(acc_init, start)],
-        &mut HashSet::default(),
-        neighbor_fn,
-        end_state_fn,
-        acc_fn,
-    )
-}
-
-pub fn dfs_full<S, N, E, I, A, AF>(
-    work_stack: &mut Vec<(A, S)>,
-    visited: &mut HashSet<S>,
     mut neighbor_fn: N,
     mut end_state_fn: E,
+    acc_init: A,
     mut acc_fn: AF,
 ) -> Option<(A, S)>
 where
@@ -76,54 +53,91 @@ where
     I: IntoIterator<Item = S>,
     AF: FnMut(&A, &S) -> A,
 {
+    try_dfs(start, acc_init, |acc, current_state| {
+        let acc = acc_fn(acc, current_state);
+        if end_state_fn(&acc, current_state) {
+            return ControlFlow::Break(acc);
+        }
+        ControlFlow::Continue(
+            neighbor_fn(current_state).into_iter().map(move |next_state| (acc.clone(), next_state)),
+        )
+    })
+}
+
+#[allow(dead_code)]
+pub fn dfs_full<S, N, E, I, A, AF>(
+    work_stack: Vec<(A, S)>,
+    visited: HashSet<S>,
+    mut neighbor_fn: N,
+    mut end_state_fn: E,
+    mut acc_fn: AF,
+) -> ControlFlow<(A, S, Vec<(A, S)>, HashSet<S>), HashSet<S>>
+where
+    A: Clone,
+    S: Eq + PartialEq + Hash + Debug,
+    N: FnMut(&S) -> I,
+    E: FnMut(&A, &S) -> bool,
+    I: IntoIterator<Item = S>,
+    AF: FnMut(&A, &S) -> A,
+{
+    try_dfs_full(work_stack, visited, |acc, current_state| {
+        let acc = acc_fn(acc, current_state);
+        if end_state_fn(&acc, current_state) {
+            return ControlFlow::Break(acc);
+        }
+        ControlFlow::Continue(
+            neighbor_fn(current_state).into_iter().map(move |next_state| (acc.clone(), next_state)),
+        )
+    })
+}
+
+pub fn try_dfs<S, A, C, R, I>(start: S, acc_init: A, compute_neighbor_fn: C) -> Option<(R, S)>
+where
+    A: Clone,
+    S: Eq + PartialEq + Hash + Debug,
+    C: FnMut(&A, &S) -> ControlFlow<R, I>,
+    I: IntoIterator<Item = (A, S)>,
+{
+    match try_dfs_full(vec![(acc_init, start)], HashSet::default(), compute_neighbor_fn) {
+        ControlFlow::Continue(_) => None,
+        ControlFlow::Break((a, s, _, _)) => Some((a, s)),
+    }
+}
+
+pub fn try_dfs_full<S, C, I, A, R>(
+    mut work_stack: Vec<(A, S)>,
+    mut visited: HashSet<S>,
+    mut compute_neighbor_fn: C,
+) -> ControlFlow<(R, S, Vec<(A, S)>, HashSet<S>), HashSet<S>>
+where
+    A: Clone,
+    S: Eq + PartialEq + Hash + Debug,
+    C: FnMut(&A, &S) -> ControlFlow<R, I>,
+    I: IntoIterator<Item = (A, S)>,
+{
     while let Some((acc, current_state)) = work_stack.pop() {
         if !visited.contains(&current_state) {
-            let acc = acc_fn(&acc, &current_state);
-
-            if end_state_fn(&acc, &current_state) {
-                return Some((acc, current_state));
+            match compute_neighbor_fn(&acc, &current_state) {
+                ControlFlow::Continue(iter) => {
+                    iter.into_iter().for_each(|item| work_stack.push(item))
+                }
+                ControlFlow::Break(b) => {
+                    return ControlFlow::Break((b, current_state, work_stack, visited));
+                }
             }
-            neighbor_fn(&current_state)
-                .into_iter()
-                .map(|next_state| (acc.clone(), next_state))
-                .for_each(|item| work_stack.push(item));
 
             visited.insert(current_state);
         }
     }
 
-    None
+    ControlFlow::Continue(visited)
 }
 
 pub fn bfs<S, N, E, I, A, AF>(
     start: S,
-    neighbor_fn: N,
-    end_state_fn: E,
-    acc_init: A,
-    acc_fn: AF,
-) -> Option<(A, S)>
-where
-    A: Clone,
-    S: Eq + PartialEq + Hash + Debug,
-    N: FnMut(&S) -> I,
-    E: FnMut(&A, &S) -> bool,
-    I: IntoIterator<Item = S>,
-    AF: FnMut(&A, &S) -> A,
-{
-    bfs_full(
-        &mut VecDeque::from([(acc_init, start)]),
-        &mut HashSet::default(),
-        neighbor_fn,
-        end_state_fn,
-        acc_fn,
-    )
-}
-
-pub fn bfs_full<S, N, E, I, A, AF>(
-    work_queue: &mut VecDeque<(A, S)>,
-    visited: &mut HashSet<S>,
     mut neighbor_fn: N,
     mut end_state_fn: E,
+    acc_init: A,
     mut acc_fn: AF,
 ) -> Option<(A, S)>
 where
@@ -134,23 +148,85 @@ where
     I: IntoIterator<Item = S>,
     AF: FnMut(&A, &S) -> A,
 {
+    try_bfs(start, acc_init, |acc, current_state| {
+        let acc = acc_fn(acc, current_state);
+        if end_state_fn(&acc, current_state) {
+            return ControlFlow::Break(acc);
+        }
+        ControlFlow::Continue(
+            neighbor_fn(current_state).into_iter().map(move |next_state| (acc.clone(), next_state)),
+        )
+    })
+}
+
+#[allow(dead_code)]
+pub fn bfs_full<S, N, E, I, A, AF>(
+    work_queue: VecDeque<(A, S)>,
+    visited: HashSet<S>,
+    mut neighbor_fn: N,
+    mut end_state_fn: E,
+    mut acc_fn: AF,
+) -> ControlFlow<(A, S, VecDeque<(A, S)>, HashSet<S>), HashSet<S>>
+where
+    A: Clone,
+    S: Eq + PartialEq + Hash + Debug,
+    N: FnMut(&S) -> I,
+    E: FnMut(&A, &S) -> bool,
+    I: IntoIterator<Item = S>,
+    AF: FnMut(&A, &S) -> A,
+{
+    try_bfs_full(work_queue, visited, |acc, current_state| {
+        let acc = acc_fn(acc, current_state);
+        if end_state_fn(&acc, current_state) {
+            return ControlFlow::Break(acc);
+        }
+        ControlFlow::Continue(
+            neighbor_fn(current_state).into_iter().map(move |next_state| (acc.clone(), next_state)),
+        )
+    })
+}
+
+pub fn try_bfs_full<S, C, I, A, R>(
+    mut work_queue: VecDeque<(A, S)>,
+    mut visited: HashSet<S>,
+    mut compute_neighbor_fn: C,
+) -> ControlFlow<(R, S, VecDeque<(A, S)>, HashSet<S>), HashSet<S>>
+where
+    A: Clone,
+    S: Eq + PartialEq + Hash + Debug,
+    C: FnMut(&A, &S) -> ControlFlow<R, I>,
+    I: IntoIterator<Item = (A, S)>,
+{
     while let Some((acc, current_state)) = work_queue.pop_front() {
         if !visited.contains(&current_state) {
-            let acc = acc_fn(&acc, &current_state);
-
-            if end_state_fn(&acc, &current_state) {
-                return Some((acc, current_state));
+            match compute_neighbor_fn(&acc, &current_state) {
+                ControlFlow::Continue(iter) => {
+                    iter.into_iter().for_each(|item| work_queue.push_back(item))
+                }
+                ControlFlow::Break(b) => {
+                    return ControlFlow::Break((b, current_state, work_queue, visited));
+                }
             }
-            neighbor_fn(&current_state)
-                .into_iter()
-                .map(|next_state| (acc.clone(), next_state))
-                .for_each(|item| work_queue.push_back(item));
 
             visited.insert(current_state);
         }
     }
 
-    None
+    ControlFlow::Continue(visited)
+}
+
+pub fn try_bfs<S, A, C, R, I>(start: S, acc_init: A, compute_neighbor_fn: C) -> Option<(R, S)>
+where
+    A: Clone,
+    S: Eq + PartialEq + Hash + Debug,
+    C: FnMut(&A, &S) -> ControlFlow<R, I>,
+    I: IntoIterator<Item = (A, S)>,
+{
+    match try_bfs_full(VecDeque::from([(acc_init, start)]), HashSet::default(), compute_neighbor_fn)
+    {
+        ControlFlow::Continue(_) => None,
+        ControlFlow::Break((a, s, _, _)) => Some((a, s)),
+    }
 }
 
 #[allow(dead_code)]
