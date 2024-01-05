@@ -8,11 +8,9 @@ use derive_more::{Add, AddAssign, Deref, From, FromStr, Into, Sub, SubAssign};
 use derive_new::new;
 use itertools::Itertools;
 
-use crate::solver::{ProblemSolver, share_struct_solver};
+use crate::solver::{share_struct_solver, ProblemSolver};
 
 share_struct_solver!(Day24, Day24Part1, Day24Part2);
-
-type BitSet = bit_set::BitSet<usize>;
 
 #[derive(new, Deref, Debug)]
 pub struct Day24Part1(Vec<Line>);
@@ -60,6 +58,7 @@ impl Line {
         Line2D { pos: self.pos.project_y_z(), vel: self.vel.project_y_z() }
     }
 
+    #[allow(dead_code)]
     fn project_z_x(&self) -> Line2D {
         Line2D { pos: self.pos.project_z_x(), vel: self.vel.project_z_x() }
     }
@@ -78,10 +77,12 @@ impl Vec3D {
         Vec2D { x: self.z, y: self.x }
     }
 
+    #[allow(dead_code)]
     fn no_zero(&self) -> bool {
         self.x.abs() > EPSILON && self.y.abs() > EPSILON && self.z.abs() > EPSILON
     }
 
+    #[allow(dead_code)]
     fn cross_product(&self, other: &Vec3D) -> Vec3D {
         Vec3D {
             x: self.project_y_z().cross_product(&other.project_y_z()),
@@ -186,8 +187,7 @@ impl ProblemSolver for Day24Part1 {
 
 impl Day24Part1 {
     fn intersect_in_area_count<R: RangeBounds<f64>>(&self, x_y_bound: &R) -> usize {
-        self
-            .iter()
+        self.iter()
             .map(Line::project_x_y)
             .tuple_combinations()
             .filter_map(|(left, right)| {
@@ -227,29 +227,34 @@ impl Day24Part2 {
     }
 
     fn generate_linear_equation_collision_3d(l1: &Line, l2: &Line) -> Box<[[f64; 7]; 2]> {
-        let first = Self::generate_linear_equation_collision_2d(&l1.project_x_y(), &l2.project_x_y());
+        let first =
+            Self::generate_linear_equation_collision_2d(&l1.project_x_y(), &l2.project_x_y());
         let first = [first[0], first[1], 0.0, first[2], first[3], 0.0, first[4]];
 
-        let second = Self::generate_linear_equation_collision_2d(&l1.project_y_z(), &l2.project_y_z());
+        let second =
+            Self::generate_linear_equation_collision_2d(&l1.project_y_z(), &l2.project_y_z());
         let second = [0.0, second[0], second[1], 0.0, second[2], second[3], second[4]];
 
         Box::new([first, second])
     }
 
-    fn forward_elimination<T: IndexMut<usize, Output=f64>, M: IndexMut<usize, Output=T> + AsMut<[T]>>(matrix: &mut M, size: usize) -> Option<usize> {
+    fn forward_elimination<T, M>(matrix: &mut M, size: usize) -> Option<usize>
+    where
+        T: IndexMut<usize, Output = f64>,
+        M: IndexMut<usize, Output = T> + AsMut<[T]>,
+    {
         let matrix = RefCell::new(matrix);
         match (0..size).try_for_each(|k| {
             let mut i_max = k;
             {
                 let matrix_ref = matrix.borrow();
                 let mut v_max = matrix_ref[i_max][k];
-                (k + 1..size).map(|i| (i, matrix_ref[i][k]))
-                    .for_each(|(i, v)| {
-                        if v.abs() > v_max {
-                            v_max = v;
-                            i_max = i;
-                        }
-                    });
+                (k + 1..size).map(|i| (i, matrix_ref[i][k])).for_each(|(i, v)| {
+                    if v.abs() > v_max {
+                        v_max = v;
+                        i_max = i;
+                    }
+                });
 
                 if matrix_ref[k][i_max].abs() <= EPSILON {
                     return ControlFlow::Break(k);
@@ -260,10 +265,11 @@ impl Day24Part2 {
                 matrix.borrow_mut().deref_mut().as_mut().swap(i_max, k);
             }
 
-            (k + 1..size).map(|i| {
-                let matrix_ref = matrix.borrow();
-                (i, matrix_ref[i][k] / matrix_ref[k][k])
-            })
+            (k + 1..size)
+                .map(|i| {
+                    let matrix_ref = matrix.borrow();
+                    (i, matrix_ref[i][k] / matrix_ref[k][k])
+                })
                 .for_each(|(i, f)| {
                     (k + 1..=size).for_each(|j| {
                         let mut matrix_mut = matrix.borrow_mut();
@@ -275,16 +281,20 @@ impl Day24Part2 {
             ControlFlow::Continue(())
         }) {
             ControlFlow::Continue(_) => None,
-            ControlFlow::Break(singular_row_id) => Some(singular_row_id)
+            ControlFlow::Break(singular_row_id) => Some(singular_row_id),
         }
     }
 
-    fn back_substitution<T: Index<usize, Output=f64>, M: Index<usize, Output=T> + DerefMut<Target=[T]>>(matrix: &M, size: usize) -> Vec<f64> {
+    fn back_substitution<T, M>(matrix: &M, size: usize) -> Vec<f64>
+    where
+        T: Index<usize, Output = f64>,
+        M: Index<usize, Output = T> + DerefMut<Target = [T]>,
+    {
         let mut res = vec![0.0; size];
 
         (0..size).rev().for_each(|i| {
-            res[i] = (matrix[i][size] - (i + 1..size).map(|j| matrix[i][j] * res[j])
-                .sum::<f64>()) / matrix[i][i]
+            res[i] = (matrix[i][size] - (i + 1..size).map(|j| matrix[i][j] * res[j]).sum::<f64>())
+                / matrix[i][i]
         });
 
         res
@@ -295,19 +305,22 @@ impl ProblemSolver for Day24Part2 {
     type SolutionType = usize;
 
     fn solve(&self) -> Result<Self::SolutionType> {
-        self.iter().tuple_combinations().map(
-            |(v0, v1, v2, v3)| {
+        self.iter()
+            .tuple_combinations()
+            .map(|(v0, v1, v2, v3)| {
                 let mut res = Vec::with_capacity(6);
-                res.extend(Self::generate_linear_equation_collision_3d(v0, v1).into_iter());
-                res.extend(Self::generate_linear_equation_collision_3d(v1, v2).into_iter());
-                res.extend(Self::generate_linear_equation_collision_3d(v2, v3).into_iter());
+                res.extend(*Self::generate_linear_equation_collision_3d(v0, v1));
+                res.extend(*Self::generate_linear_equation_collision_3d(v1, v2));
+                res.extend(*Self::generate_linear_equation_collision_3d(v2, v3));
 
                 res
-            }
-        ).filter_map(|mut matrix| match Self::forward_elimination(&mut matrix, 6) {
-            None => Some(matrix),
-            Some(_) => None,
-        }).next().map(|matrix| Self::back_substitution(&matrix, 6))
+            })
+            .filter_map(|mut matrix| match Self::forward_elimination(&mut matrix, 6) {
+                None => Some(matrix),
+                Some(_) => None,
+            })
+            .next()
+            .map(|matrix| Self::back_substitution(&matrix, 6))
             .map(|res| res.into_iter().take(3).map(|v| v.round() as usize).sum())
             .context("Cannot found a valid starting rock position and velocity")
     }
@@ -320,8 +333,8 @@ mod tests {
     use anyhow::Result;
     use indoc::indoc;
 
-    use crate::solver::ProblemSolver;
     use crate::solver::y2023::day24::{Day24Part1, Day24Part2};
+    use crate::solver::ProblemSolver;
 
     const SAMPLE_INPUT_1: &str = indoc! {r"
             19, 13, 30 @ -2,  1, -2
